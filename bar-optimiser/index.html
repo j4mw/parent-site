@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bar Optimiser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:         #0d0d0d;
+  --surface:    #161616;
+  --surface2:   #1e1e1e;
+  --border:     rgba(255,255,255,0.08);
+  --border2:    rgba(255,255,255,0.14);
+  --accent:     #6ee7b7;
+  --accent2:    #34d399;
+  --text:       #f4f4f4;
+  --text2:      #c0c0c0;
+  --text3:      #707070;
+  --danger:     #f87171;
+  --radius:     6px;
+  --radius-sm:  4px;
+  --font-mono:  'Geist Mono', monospace;
+  --font-sans:  'Geist', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── Titlebar ── */
+.titlebar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.wordmark-icon {
+  width: 26px; height: 26px;
+  background: var(--accent);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wordmark-icon svg { width: 14px; height: 14px; }
+
+.titlebar-divider { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
+
+.titlebar-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.titlebar-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 12px; height: 32px;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: all 0.15s ease; white-space: nowrap; outline: none;
+}
+.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+.btn-primary { background: var(--accent); border: 1px solid var(--accent); color: #0d0d0d; font-weight: 600; }
+.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { background: rgba(110,231,183,0.08); border-color: rgba(110,231,183,0.4); color: var(--accent); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+.btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ── Workspace ── */
+.workspace { flex: 1; display: flex; overflow: hidden; }
+
+/* ── Sidebar / Inputs ── */
+.sidebar {
+  width: 280px; flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
+
+.sidebar-title {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text2); margin-bottom: 12px;
+}
+
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+
+.field-label {
+  font-size: 11px; color: var(--text);
+  font-family: var(--font-mono); letter-spacing: 0.02em;
+}
+
+.field-input {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 7px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.field-input:focus { border-color: rgba(110,231,183,0.5); }
+.field-input::placeholder { color: var(--text3); }
+
+textarea.field-input {
+  resize: vertical; min-height: 80px;
+  line-height: 1.6;
+}
+
+.field-hint { font-size: 10px; color: var(--text2); font-family: var(--font-mono); }
+
+/* ── Stats strip ── */
+.stats-strip {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px; background: var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.stat-cell {
+  background: var(--surface);
+  padding: 10px 14px;
+}
+.stat-label { font-size: 10px; color: var(--text2); margin-bottom: 2px; font-family: var(--font-mono); }
+.stat-value { font-size: 18px; font-weight: 600; color: var(--text); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.stat-value.accent { color: var(--accent); }
+.stat-value.danger { color: var(--danger); }
+
+/* ── Main content ── */
+.content {
+  flex: 1; overflow-y: auto;
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; color: var(--text3);
+}
+.empty-icon {
+  width: 48px; height: 48px;
+  border: 1px dashed var(--border2); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 4px;
+}
+.empty-icon svg { width: 22px; height: 22px; }
+.empty-title { font-size: 14px; font-weight: 500; color: var(--text2); }
+.empty-sub { font-size: 11px; font-family: var(--font-mono); }
+
+/* ── Bar row ── */
+.bar-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.bar-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bar-index {
+  width: 22px; height: 22px; border-radius: 4px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+  color: var(--text3); flex-shrink: 0;
+}
+
+.bar-cuts-summary {
+  font-size: 11px; color: var(--text); font-family: var(--font-mono);
+}
+
+.bar-waste-badge {
+  margin-left: auto;
+  font-size: 10px; font-family: var(--font-mono);
+  padding: 2px 8px; border-radius: 10px;
+  flex-shrink: 0;
+}
+.waste-low  { background: rgba(110,231,183,0.1); color: var(--accent); border: 1px solid rgba(110,231,183,0.2); }
+.waste-med  { background: rgba(251,191,36,0.1);  color: #fbbf24;       border: 1px solid rgba(251,191,36,0.2); }
+.waste-high { background: rgba(248,113,113,0.1); color: var(--danger); border: 1px solid rgba(248,113,113,0.2); }
+
+/* ── Visual bar ── */
+.bar-visual { padding: 12px 14px 14px; }
+
+.bar-track {
+  height: 36px; border-radius: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex; overflow: hidden;
+  position: relative;
+}
+
+.bar-segment {
+  height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  overflow: hidden; transition: opacity 0.15s;
+  cursor: default; position: relative;
+  border-right: 1px solid rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+.bar-segment:last-child { border-right: none; }
+.bar-segment span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+
+.seg-cut  { background: rgba(110,231,183,0.18); color: var(--accent); }
+.seg-kerf { background: rgba(255,255,255,0.04); color: var(--text3); width: 4px; min-width: 4px; }
+.seg-waste{ background: rgba(248,113,113,0.10); color: var(--danger); }
+
+.bar-legend {
+  display: flex; gap: 16px; margin-top: 8px;
+  font-size: 10px; font-family: var(--font-mono); color: var(--text2);
+  align-items: center;
+}
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  background: #1a0a0a; border: 1px solid rgba(248,113,113,0.3);
+  color: var(--danger); padding: 8px 16px; border-radius: var(--radius);
+  font-size: 12px; z-index: 50;
+  animation: toastIn 0.2s ease;
+}
+.toast-success { background: rgba(110,231,183,0.08); border-color: rgba(110,231,183,0.2); color: var(--accent); }
+@keyframes toastIn {
+  from { opacity:0; transform:translateX(-50%) translateY(-6px); }
+  to   { opacity:1; transform:translateX(-50%) translateY(0); }
+}
+
+/* ── Cut list rows ── */
+.cut-list { display: flex; flex-direction: column; gap: 4px; }
+
+.cut-row {
+  display: flex; align-items: center; gap: 6px;
+}
+
+.cut-row-num {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text2); width: 16px; text-align: right; flex-shrink: 0;
+}
+
+.cut-row-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.cut-row-input:focus { border-color: rgba(110,231,183,0.5); }
+.cut-row-input::placeholder { color: var(--text3); }
+
+.cut-row-del {
+  width: 24px; height: 24px; flex-shrink: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text3);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s;
+  padding: 0;
+}
+.cut-row-del:hover { border-color: rgba(248,113,113,0.3); color: var(--danger); background: rgba(248,113,113,0.08); }
+.cut-row-del svg { width: 11px; height: 11px; }
+
+.cut-add-btn {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; padding: 6px 10px; margin-top: 4px;
+  background: transparent;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text3); font-size: 11px;
+  font-family: var(--font-mono);
+  cursor: pointer; transition: all 0.15s;
+}
+.cut-add-btn:hover { border-color: rgba(110,231,183,0.3); color: var(--accent); background: rgba(110,231,183,0.04); }
+.cut-add-btn svg { width: 11px; height: 11px; }
+
+/* ── Responsive ── */
+
+/* Tablet (≤900px): sidebar goes to top as a horizontal strip */
+@media (max-width: 900px) {
+  .app { height: auto; min-height: 100vh; overflow: auto; }
+
+  .workspace { flex-direction: column; overflow: visible; }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .sidebar-section {
+    flex: 1;
+    min-width: 200px;
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+  }
+  .sidebar-section:last-child { border-right: none; }
+
+  .content { overflow: visible; }
+
+  .stats-strip { flex-shrink: 0; }
+}
+
+/* Mobile (≤600px): full single-column */
+@media (max-width: 600px) {
+  .titlebar {
+    padding: 0 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .titlebar-meta { display: none; }
+  .titlebar-divider { display: none; }
+
+  .titlebar-actions { margin-left: auto; gap: 4px; }
+
+  .btn { padding: 0 10px; height: 30px; font-size: 11px; }
+  .btn svg { width: 12px; height: 12px; }
+
+  .sidebar { flex-direction: column; }
+
+  .sidebar-section {
+    flex: unset;
+    width: 100%;
+    min-width: unset;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-value { font-size: 15px; }
+
+  .bar-track { height: 30px; }
+
+  .bar-header { flex-wrap: wrap; gap: 6px; }
+
+  .bar-cuts-summary {
+    width: 100%;
+    order: 3;
+    font-size: 10px;
+  }
+
+  .content { padding: 12px; gap: 10px; }
+
+  .stats-strip { grid-template-columns: 1fr 1fr 1fr; }
+
+  .stat-cell { padding: 8px 10px; }
+}
+
+/* Very small (≤380px) */
+@media (max-width: 380px) {
+  .stats-strip { grid-template-columns: 1fr 1fr; }
+  .stat-cell:last-child { grid-column: span 2; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Titlebar -->
+  <header class="titlebar">
+    <div class="wordmark">
+      <div class="wordmark-icon">
+        <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="5" width="12" height="4" rx="1" fill="#0d0d0d" opacity="0.7"/>
+          <rect x="1" y="2" width="5" height="2" rx="0.5" fill="#0d0d0d"/>
+          <rect x="1" y="10" width="8" height="2" rx="0.5" fill="#0d0d0d"/>
+        </svg>
+      </div>
+      Bar Optimiser
+    </div>
+    <div class="titlebar-divider"></div>
+    <span class="titlebar-meta">cut length optimisation</span>
+    <div class="titlebar-actions">
+      <button class="btn btn-ghost" id="btn-clear">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
+        Clear
+      </button>
+      <button class="btn btn-primary" id="btn-calculate">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        Calculate
+      </button>
+    </div>
+  </header>
+
+  <div class="workspace">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Stock</div>
+        <div class="field">
+          <label class="field-label" for="barLength">Bar Length</label>
+          <input class="field-input" type="number" id="barLength" placeholder="e.g. 6000" />
+          <span class="field-hint">mm</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="cutAllowance">Cut Allowance (kerf)</label>
+          <input class="field-input" type="number" id="cutAllowance" placeholder="e.g. 3" />
+          <span class="field-hint">mm per cut</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section" style="flex:1;overflow-y:auto;">
+        <div class="sidebar-title" style="display:flex;align-items:center;justify-content:space-between;">
+          Cut List
+          <span id="cut-count-badge" class="layers-count" style="opacity:0">0</span>
+        </div>
+        <div class="cut-list" id="cut-list"></div>
+        <button class="cut-add-btn" id="btn-add-cut">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 1v10M1 6h10"/></svg>
+          Add length
+        </button>
+        <div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:var(--font-mono);">
+          Enter one length per row in mm
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">About</div>
+        <p style="font-size:11px;color:var(--text3);line-height:1.6;font-family:var(--font-mono);">
+          Optimises bar stock usage using a first-fit decreasing algorithm. Minimises waste across all stock lengths.
+        </p>
+        <p style="font-size:10px;color:var(--text3);margin-top:12px;font-family:var(--font-mono);">© James Wright 2023</p>
+      </div>
+    </aside>
+
+    <!-- Main panel -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+
+      <!-- Stats strip -->
+      <div class="stats-strip" id="stats-strip" style="display:none">
+        <div class="stat-cell">
+          <div class="stat-label">Bars Required</div>
+          <div class="stat-value accent" id="stat-bars">—</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Total Cuts</div>
+          <div class="stat-value" id="stat-cuts">—</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Avg Waste</div>
+          <div class="stat-value" id="stat-waste">—</div>
+        </div>
+      </div>
+
+      <!-- Content area -->
+      <div class="content" id="content">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="8" width="20" height="8" rx="2"/>
+              <path d="M6 8V6M10 8V5M14 8V6M18 8V5"/>
+            </svg>
+          </div>
+          <div class="empty-title">No cuts yet</div>
+          <div class="empty-sub">Enter your stock and cut lengths, then hit Calculate</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Optimiser (from optimiser.js) ────────────────────────────────
+function optimiseBarCutting(stockLength, cutSizes, allowancePerCut) {
+  cutSizes = [...cutSizes].sort((a, b) => b - a);
+  const results = [];
+  while (cutSizes.length > 0) {
+    let currentStock = stockLength;
+    const currentCuts = [];
+    for (let i = 0; i < cutSizes.length; i++) {
+      const cutSize = cutSizes[i];
+      if (cutSize + allowancePerCut <= currentStock) {
+        currentCuts.push(cutSize);
+        currentStock -= cutSize + allowancePerCut;
+        cutSizes.splice(i, 1);
+        i--;
+      }
+    }
+    if (currentCuts.length > 0) {
+      const waste = stockLength - currentCuts.reduce((acc, cut) => acc + cut + allowancePerCut, 0);
+      results.push({ cuts: currentCuts, waste });
+    } else {
+      return { numberOfStockLengthsRequired: results.length, optimisedCuts: results };
+    }
+  }
+  return { numberOfStockLengthsRequired: results.length, optimisedCuts: results };
+}
+
+// ── Colour palette for cut segments ─────────────────────────────
+const SEG_COLOURS = [
+  'rgba(110,231,183,0.28)', 'rgba(125,211,252,0.28)', 'rgba(196,181,253,0.28)',
+  'rgba(253,186,116,0.28)', 'rgba(249,168,212,0.28)', 'rgba(134,239,172,0.28)',
+  'rgba(147,197,253,0.28)', 'rgba(251,207,232,0.28)',
+];
+const SEG_TEXT_COLOURS = [
+  '#6ee7b7','#7dd3fc','#c4b5fd','#fba078','#f9a8d4','#86efac','#93c5fd','#fbcfe8',
+];
+
+// ── Rendering ────────────────────────────────────────────────────
+function renderResults(result, stockLength, allowance) {
+  const content = document.getElementById('content');
+  const empty   = document.getElementById('empty-state');
+  const strip   = document.getElementById('stats-strip');
+
+  if (!result || result.optimisedCuts.length === 0) {
+    empty.style.display = 'flex';
+    strip.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  strip.style.display = 'grid';
+
+  const totalCuts = result.optimisedCuts.reduce((s, b) => s + b.cuts.length, 0);
+  const avgWaste  = result.optimisedCuts.reduce((s, b) => s + b.waste, 0) / result.optimisedCuts.length;
+  const wastePct  = (avgWaste / stockLength * 100).toFixed(1);
+
+  document.getElementById('stat-bars').textContent  = result.numberOfStockLengthsRequired;
+  document.getElementById('stat-cuts').textContent  = totalCuts;
+  document.getElementById('stat-waste').textContent = `${Math.round(avgWaste)}mm`;
+
+  // Remove old bar cards
+  content.querySelectorAll('.bar-card').forEach(el => el.remove());
+
+  result.optimisedCuts.forEach((bar, idx) => {
+    const usedLength = bar.cuts.reduce((s, c) => s + c + allowance, 0);
+    const waste      = bar.waste;
+    const wasteFrac  = waste / stockLength;
+    const wasteClass = wasteFrac < 0.05 ? 'waste-low' : wasteFrac < 0.15 ? 'waste-med' : 'waste-high';
+
+    const card = document.createElement('div');
+    card.className = 'bar-card';
+
+    // Header
+    card.innerHTML = `
+      <div class="bar-header">
+        <div class="bar-index">${idx + 1}</div>
+        <div class="bar-cuts-summary">${bar.cuts.length} cut${bar.cuts.length !== 1 ? 's' : ''} &nbsp;·&nbsp; ${bar.cuts.map(c => c + 'mm').join(', ')}</div>
+        <div class="bar-waste-badge ${wasteClass}">waste ${Math.round(waste)}mm</div>
+      </div>
+      <div class="bar-visual">
+        <div class="bar-track" id="track-${idx}"></div>
+        <div class="bar-legend">
+          <div style="display:flex;align-items:center;gap:4px">
+            <div class="legend-dot" style="background:rgba(110,231,183,0.3)"></div>cut
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>kerf
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <div class="legend-dot" style="background:rgba(248,113,113,0.15)"></div>waste ${(wasteFrac*100).toFixed(1)}%
+          </div>
+        </div>
+      </div>`;
+
+    content.appendChild(card);
+
+    // Build visual track
+    const track = card.querySelector(`#track-${idx}`);
+    bar.cuts.forEach((cut, ci) => {
+      // Cut segment
+      const cutFrac = cut / stockLength;
+      const seg = document.createElement('div');
+      seg.className = 'bar-segment seg-cut';
+      seg.style.width = (cutFrac * 100) + '%';
+      seg.style.background = SEG_COLOURS[ci % SEG_COLOURS.length];
+      seg.style.color = SEG_TEXT_COLOURS[ci % SEG_TEXT_COLOURS.length];
+      seg.innerHTML = `<span>${cut}</span>`;
+      track.appendChild(seg);
+
+      // Kerf segment
+      if (allowance > 0) {
+        const kerf = document.createElement('div');
+        kerf.className = 'bar-segment seg-kerf';
+        kerf.style.width = (allowance / stockLength * 100) + '%';
+        kerf.style.minWidth = '3px';
+        track.appendChild(kerf);
+      }
+    });
+
+    // Waste segment
+    if (waste > 0) {
+      const wseg = document.createElement('div');
+      wseg.className = 'bar-segment seg-waste';
+      wseg.style.flex = '1';
+      wseg.style.minWidth = '4px';
+      wseg.innerHTML = `<span>${Math.round(waste)}mm</span>`;
+      track.appendChild(wseg);
+    }
+  });
+}
+
+// ── Cut list row management ──────────────────────────────────────
+function addCutRow(value = '') {
+  const list = document.getElementById('cut-list');
+  const idx  = list.children.length + 1;
+
+  const row = document.createElement('div');
+  row.className = 'cut-row';
+  row.innerHTML = `
+    <span class="cut-row-num">${idx}</span>
+    <input class="cut-row-input" type="number" min="1" placeholder="e.g. 2100" value="${value}" />
+    <button class="cut-row-del" tabindex="-1" title="Remove">
+      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 2l8 8M10 2l-8 8"/></svg>
+    </button>`;
+
+  // Delete row
+  row.querySelector('.cut-row-del').addEventListener('click', () => {
+    row.remove();
+    renumberRows();
+    updateCutCountBadge();
+  });
+
+  // Tab/Enter: move to next row, or create one if on last
+  row.querySelector('input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' || (e.key === 'Tab' && !e.shiftKey)) {
+      e.preventDefault();
+      const rows = Array.from(document.querySelectorAll('.cut-row-input'));
+      const idx  = rows.indexOf(e.target);
+      if (idx < rows.length - 1) {
+        rows[idx + 1].focus();
+      } else {
+        addCutRow();
+      }
+    }
+    // Shift+Tab: move to previous row
+    if (e.key === 'Tab' && e.shiftKey) {
+      const rows = Array.from(document.querySelectorAll('.cut-row-input'));
+      const idx  = rows.indexOf(e.target);
+      if (idx > 0) { e.preventDefault(); rows[idx - 1].focus(); }
+    }
+  });
+
+  row.querySelector('input').addEventListener('input', updateCutCountBadge);
+
+  list.appendChild(row);
+  row.querySelector('input').focus();
+  updateCutCountBadge();
+}
+
+function renumberRows() {
+  document.querySelectorAll('.cut-row-num').forEach((el, i) => {
+    el.textContent = i + 1;
+  });
+}
+
+function updateCutCountBadge() {
+  const vals = getCutLengths();
+  const badge = document.getElementById('cut-count-badge');
+  badge.textContent = vals.length;
+  badge.style.opacity = vals.length > 0 ? '1' : '0';
+}
+
+function getCutLengths() {
+  return Array.from(document.querySelectorAll('.cut-row-input'))
+    .map(i => parseFloat(i.value))
+    .filter(n => n > 0);
+}
+
+// Start with 3 empty rows
+addCutRow(); addCutRow(); addCutRow();
+
+document.getElementById('btn-add-cut').addEventListener('click', () => addCutRow());
+
+// ── Event handlers ───────────────────────────────────────────────
+function calculate() {
+  const barLength    = parseFloat(document.getElementById('barLength').value);
+  const cutAllowance = parseFloat(document.getElementById('cutAllowance').value) || 0;
+  const cutLengths   = getCutLengths();
+
+  if (!barLength || barLength <= 0)  { toast('Enter a valid bar length'); return; }
+  if (cutLengths.length === 0)       { toast('Add at least one cut length'); return; }
+
+  const oversized = cutLengths.filter(c => c > barLength);
+  if (oversized.length > 0) { toast(`Cut ${oversized[0]}mm exceeds bar length ${barLength}mm`); return; }
+
+  const result = optimiseBarCutting(barLength, cutLengths, cutAllowance);
+  renderResults(result, barLength, cutAllowance);
+}
+
+function clearAll() {
+  document.getElementById('barLength').value    = '';
+  document.getElementById('cutAllowance').value = '';
+  document.getElementById('cut-list').innerHTML = '';
+  addCutRow(); addCutRow(); addCutRow();
+  document.getElementById('content').querySelectorAll('.bar-card').forEach(el => el.remove());
+  document.getElementById('empty-state').style.display = 'flex';
+  document.getElementById('stats-strip').style.display  = 'none';
+}
+
+document.getElementById('btn-calculate').addEventListener('click', calculate);
+document.getElementById('btn-clear').addEventListener('click', clearAll);
+document.getElementById('barLength').addEventListener('keydown',    e => e.key === 'Enter' && calculate());
+document.getElementById('cutAllowance').addEventListener('keydown', e => e.key === 'Enter' && calculate());
+
+// ── Toast ────────────────────────────────────────────────────────
+function toast(msg, success = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (success ? ' toast-success' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+</script>
+</body>
+</html>
