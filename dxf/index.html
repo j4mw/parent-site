@@ -1654,13 +1654,25 @@ document.getElementById('batch-input').addEventListener('change', async function
   if (!files.length) return;
   e.target.value = '';
 
-  // Show progress toast
+  // Load JSZip lazily
+  if (!window.JSZip) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
   const prog = document.createElement('div');
   prog.className = 'toast toast-success';
   prog.textContent = `Processing 0 / ${files.length}…`;
   vp.appendChild(prog);
 
+  const zip = new JSZip();
   let done = 0;
+  let errors = 0;
+
   for (const file of files) {
     await new Promise(resolve => {
       const reader = new FileReader();
@@ -1668,28 +1680,36 @@ document.getElementById('batch-input').addEventListener('change', async function
         try {
           const batchDxf = parseDXF(ev.target.result);
           const text = buildDXFText(batchDxf);
-          const blob = new Blob([text], { type: 'application/dxf' });
-          const url  = URL.createObjectURL(blob);
-          const a    = document.createElement('a');
           const base = file.name.replace(/\.dxf$/i, '');
-          a.href = url;
-          a.download = `${base}_exploded.dxf`;
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          zip.file(`${base}_exploded.dxf`, text);
         } catch(err) {
           console.error('Batch error on', file.name, err);
+          errors++;
         }
         done++;
         prog.textContent = `Processing ${done} / ${files.length}…`;
-        // Small delay between downloads so browser doesn't block them
-        setTimeout(resolve, 400);
+        resolve();
       };
       reader.readAsText(file);
     });
   }
 
+  // Generate zip and trigger download
+  prog.textContent = 'Zipping…';
+  const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `exploded_dxf_${ts}.zip`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+
   prog.remove();
-  toast(`Batch complete — ${done} file${done !== 1 ? 's' : ''} exported`, true);
+  const msg = errors > 0
+    ? `Zipped ${done - errors} / ${done} files (${errors} failed)`
+    : `Zipped ${done} file${done !== 1 ? 's' : ''} → exploded_dxf_${ts}.zip`;
+  toast(msg, errors === 0);
 });
 </script>
 </body>
