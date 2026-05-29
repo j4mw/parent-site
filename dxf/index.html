@@ -500,11 +500,16 @@ html, body {
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
         Explode & Export
       </button>
+      <button class="btn btn-outline" id="btn-batch" onclick="document.getElementById('batch-input').click()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="10" height="12" rx="1"/><path d="M4 1h9a1 1 0 011 1v11"/><path d="M4 8h6M4 11h4"/></svg>
+        Batch Explode
+      </button>
       <button class="btn btn-primary" id="btn-import" onclick="document.getElementById('file-input').click()">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 10V2M4 7l4 4 4-4M2 12v2h12v-2"/></svg>
         Import DXF
       </button>
       <input type="file" id="file-input" accept=".dxf">
+      <input type="file" id="batch-input" accept=".dxf" multiple style="display:none">
     </div>
   </header>
 
@@ -1277,13 +1282,9 @@ function toast(msg,success=false){const el=document.createElement('div');el.clas
 //  - Export as DXF 2013 (AC1027)
 // ═══════════════════════════════════════════════════════════════
 
-function explodeAndExport() {
-  if (!dxf) return;
-
-  // ── 1. Flatten: collect all primitives, resolving INSERTs recursively ──
+// ── Shared: flatten a parsed DXF object into primitives ────────
+function flattenDXF(dxfObj) {
   const flat = [];
-  let handleCounter = 1;
-  const newHandle = () => (handleCounter++).toString(16).toUpperCase();
 
   // ── Helper: explode a LWPOLYLINE/POLYLINE into LINE and ARC primitives ──
   function explodePolyline(verts, closed, mat) {
@@ -1404,7 +1405,7 @@ function explodeAndExport() {
     if (depth > 10) return;
     if (e.type === 'HATCH') return; // always strip hatches from export
     if (e.type === 'INSERT') {
-      const blk = dxf.blocks[e.block];
+      const blk = dxfObj.blocks[e.block];
       if (!blk) return;
       const rot = (e.rot || 0) * Math.PI / 180;
       const cos = Math.cos(rot), sin = Math.sin(rot);
@@ -1424,9 +1425,13 @@ function explodeAndExport() {
 
   // Flatten all top-level entities
   const imat = identityMat();
-  dxf.entities.forEach(e => flattenEntity(e, imat, 0));
+  dxfObj.entities.forEach(e => flattenEntity(e, imat, 0));
+  return flat;
+}
 
-  // ── 2. Write DXF 2013 (AC1027) ──────────────────────────────
+// ── Shared: build DXF 2013 text from a parsed DXF object ────────
+function buildDXFText(dxfObj) {
+  const flat = flattenDXF(dxfObj);
   const lines = [];
   const w = (code, val) => lines.push(`${String(code).padStart(3,' ')}\n${val}`);
 
@@ -1621,9 +1626,14 @@ function explodeAndExport() {
   w(0,'ENDSEC');
 
   w(0,'EOF');
+  return lines.join('\n');
+}
 
-  // ── 3. Download ──────────────────────────────────────────────
-  const text = lines.join('\n');
+// ── Single file explode & export ─────────────────────────────────
+function explodeAndExport() {
+  if (!dxf) return;
+  const text = buildDXFText(dxf);
+  const flat = flattenDXF(dxf); // for count in toast
   const blob = new Blob([text], { type: 'application/dxf' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
@@ -1637,6 +1647,50 @@ function explodeAndExport() {
 }
 
 document.getElementById('btn-explode').addEventListener('click', explodeAndExport);
+
+// ── Batch explode ──────────────────────────────────────────────
+document.getElementById('batch-input').addEventListener('change', async function(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  e.target.value = '';
+
+  // Show progress toast
+  const prog = document.createElement('div');
+  prog.className = 'toast toast-success';
+  prog.textContent = `Processing 0 / ${files.length}…`;
+  vp.appendChild(prog);
+
+  let done = 0;
+  for (const file of files) {
+    await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const batchDxf = parseDXF(ev.target.result);
+          const text = buildDXFText(batchDxf);
+          const blob = new Blob([text], { type: 'application/dxf' });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          const base = file.name.replace(/\.dxf$/i, '');
+          a.href = url;
+          a.download = `${base}_exploded.dxf`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch(err) {
+          console.error('Batch error on', file.name, err);
+        }
+        done++;
+        prog.textContent = `Processing ${done} / ${files.length}…`;
+        // Small delay between downloads so browser doesn't block them
+        setTimeout(resolve, 400);
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  prog.remove();
+  toast(`Batch complete — ${done} file${done !== 1 ? 's' : ''} exported`, true);
+});
 </script>
 </body>
 </html>
