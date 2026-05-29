@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DXF Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:         #0d0d0d;
+  --surface:    #141414;
+  --surface2:   #1a1a1a;
+  --border:     rgba(255,255,255,0.06);
+  --border2:    rgba(255,255,255,0.10);
+  --accent:     #6ee7b7;
+  --accent2:    #34d399;
+  --text:       #f0f0f0;
+  --text2:      #a0a0a0;
+  --text3:      #525252;
+  --danger:     #f87171;
+  --grid:       rgba(255,255,255,0.025);
+  --radius:     6px;
+  --radius-sm:  4px;
+  --font-mono:  'Geist Mono', monospace;
+  --font-sans:  'Geist', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ── */
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+/* ── Titlebar ── */
+.titlebar {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.wordmark-icon {
+  width: 26px; height: 26px;
+  background: var(--accent);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wordmark-icon svg { width: 14px; height: 14px; }
+
+.titlebar-divider {
+  width: 1px; height: 20px;
+  background: var(--border2);
+  flex-shrink: 0;
+}
+
+.file-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.file-badge.visible { opacity: 1; }
+.file-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.titlebar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 32px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  letter-spacing: 0;
+  outline: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.btn-ghost:hover {
+  background: var(--surface2);
+  border-color: var(--border2);
+  color: var(--text);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #0d0d0d;
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background: var(--accent2);
+  border-color: var(--accent2);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.btn-outline:hover {
+  background: rgba(110,231,183,0.08);
+  border-color: rgba(110,231,183,0.4);
+  color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ── Main layout ── */
+.workspace { flex: 1; display: flex; overflow: hidden; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.stat-label {
+  font-size: 10px;
+  color: var(--text3);
+  margin-bottom: 2px;
+  font-family: var(--font-mono);
+}
+.stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.layers-header {
+  padding: 10px 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.layers-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.layers-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.layer-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 8px;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.1s;
+  user-select: none;
+}
+.layer-item:hover { background: var(--surface2); }
+.layer-item.hidden { opacity: 0.35; }
+
+.layer-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.layer-name {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+.layer-item:hover .layer-name { color: var(--text); }
+.layer-count-badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Viewport ── */
+.viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #080b0f;
+  background-image:
+    linear-gradient(rgba(99,179,237,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,179,237,0.05) 1px, transparent 1px),
+    linear-gradient(rgba(99,179,237,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,179,237,0.018) 1px, transparent 1px);
+  background-size: 160px 160px, 160px 160px, 32px 32px, 32px 32px;
+}
+
+#canvas {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+}
+#canvas.panning { cursor: grabbing; }
+
+/* ── Drop overlay ── */
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: background 0.2s;
+  pointer-events: none;
+}
+.drop-overlay.active { pointer-events: all; }
+.drop-overlay.hidden { display: none; }
+.drop-overlay.dragover {
+  background: rgba(110,231,183,0.04);
+  outline: 1.5px dashed var(--accent);
+  outline-offset: -12px;
+}
+
+.drop-zone-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px;
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  pointer-events: all;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.drop-zone-inner:hover {
+  border-color: rgba(110,231,183,0.3);
+  background: rgba(110,231,183,0.03);
+}
+
+.drop-icon-wrap {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+}
+.drop-icon-wrap svg { width: 22px; height: 22px; color: var(--text3); }
+
+.drop-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text2);
+  text-align: center;
+}
+.drop-label span { color: var(--accent); }
+.drop-sub {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+}
+
+/* ── Floating toolbar ── */
+.toolbar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 4px;
+  z-index: 10;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  backdrop-filter: blur(12px);
+}
+
+.tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.1s;
+  font-size: 15px;
+}
+.tool-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.tool-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* ── Coords ── */
+.coords {
+  position: absolute;
+  bottom: 20px;
+  right: 16px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  z-index: 5;
+  letter-spacing: 0.02em;
+}
+
+/* ── Toast ── */
+.toast {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a0a0a;
+  border: 1px solid rgba(248,113,113,0.3);
+  color: var(--danger);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  animation: toastIn 0.2s ease;
+}
+.toast-success {
+  background: rgba(110,231,183,0.08);
+  border-color: rgba(110,231,183,0.2);
+  color: var(--accent);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+#file-input { display: none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Titlebar -->
+  <header class="titlebar">
+    <div class="wordmark">
+      <div class="wordmark-icon">
+        <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 2h4v4H2zM8 2h4v4H8zM2 8h4v4H2zM8 8h4v4H8z" fill="#0d0d0d" opacity="0.8"/>
+          <path d="M5 5h4v4H5z" fill="#0d0d0d"/>
+        </svg>
+      </div>
+      DXF Studio
+    </div>
+
+    <div class="titlebar-divider"></div>
+
+    <div class="file-badge" id="file-badge">
+      <div class="file-badge-dot"></div>
+      <span id="info-name">—</span>
+    </div>
+
+    <div class="titlebar-actions">
+      <button class="btn btn-ghost" id="btn-fit">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6V1h5M10 1h5v5M15 10v5h-5M6 15H1v-5"/></svg>
+        Fit
+      </button>
+      <button class="btn btn-outline" id="btn-explode" disabled>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>
+        Explode & Export
+      </button>
+      <button class="btn btn-primary" id="btn-import" onclick="document.getElementById('file-input').click()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 10V2M4 7l4 4 4-4M2 12v2h12v-2"/></svg>
+        Import DXF
+      </button>
+      <input type="file" id="file-input" accept=".dxf">
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <div class="workspace">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">File Info</div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Entities</div>
+            <div class="stat-value" id="info-entities">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Layers</div>
+            <div class="stat-value" id="info-layers">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Blocks</div>
+            <div class="stat-value" id="info-blocks">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Units</div>
+            <div class="stat-value" id="info-units">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layers-header">
+        <span class="layers-title">Layers</span>
+        <span class="layers-count" id="layers-count">0</span>
+      </div>
+      <div class="layer-list" id="layer-list"></div>
+    </aside>
+
+    <!-- Viewport -->
+    <div class="viewport" id="viewport">
+      <canvas id="canvas"></canvas>
+
+      <!-- Drop overlay -->
+      <div class="drop-overlay active" id="drop-overlay">
+        <div class="drop-zone-inner" onclick="document.getElementById('file-input').click()">
+          <div class="drop-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div class="drop-label">Drop a <span>.dxf</span> file here</div>
+          <div class="drop-sub">or click to browse</div>
+        </div>
+      </div>
+
+      <!-- Floating toolbar -->
+      <div class="toolbar">
+        <button class="tool-btn" id="tool-zoom-in" title="Zoom In">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="4.5"/><line x1="9.5" y1="9.5" x2="13" y2="13"/><line x1="6" y1="4" x2="6" y2="8"/><line x1="4" y1="6" x2="8" y2="6"/></svg>
+        </button>
+        <button class="tool-btn" id="tool-zoom-out" title="Zoom Out">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="4.5"/><line x1="9.5" y1="9.5" x2="13" y2="13"/><line x1="4" y1="6" x2="8" y2="6"/></svg>
+        </button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" id="tool-fit" title="Fit to view">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9"/></svg>
+        </button>
+      </div>
+
+      <!-- Coords -->
+      <div class="coords" id="coords">X: 0.000 &nbsp; Y: 0.000</div>
+    </div>
+  </div>
+</div>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  BULGE → ARC
+//  DXF bulge = tan(included_angle / 4)
+//  Given two endpoints p1, p2 and a bulge value, compute the
+//  arc centre, radius, startAngle, endAngle (in radians, world).
+// ═══════════════════════════════════════════════════════════════
+function bulgeToArc(x1, y1, x2, y2, bulge) {
+  const dx = x2 - x1, dy = y2 - y1;
+  const d  = Math.hypot(dx, dy);
+  if (d === 0) return null;
+
+  // half-chord length
+  const l = d / 2;
+  // radius from bulge: r = (d/2) * (b^2 + 1) / (2*|b|)
+  const b  = bulge;
+  const r  = (l * (b*b + 1)) / (2 * Math.abs(b));
+  // distance from midpoint of chord to centre
+  const s  = r - Math.abs(b) * l; // sagitta complement
+  const h  = Math.sqrt(Math.max(0, r*r - l*l));
+
+  // midpoint of chord
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+  // perpendicular direction (normalised)
+  const px = -dy / d, py = dx / d;
+
+  // centre: if bulge > 0 CCW arc, centre is to the left
+  // DXF convention: positive bulge = CCW arc (centre to the LEFT of travel direction)
+  const sign = bulge > 0 ? 1 : -1;
+  const cx = mx + sign * h * px;
+  const cy = my + sign * h * py;
+
+  const sa = Math.atan2(y1 - cy, x1 - cx);
+  const ea = Math.atan2(y2 - cy, x2 - cx);
+
+  return { cx, cy, r, sa, ea, ccw: bulge > 0 };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ACI COLOUR
+// ═══════════════════════════════════════════════════════════════
+const ACI={1:'#FF0000',2:'#FFFF00',3:'#00FF00',4:'#00FFFF',5:'#0000FF',6:'#FF00FF',
+  7:'#FFFFFF',8:'#414141',9:'#808080',
+  10:'#FF0000',11:'#FF7F7F',12:'#A50000',13:'#A57F7F',14:'#7F0000',15:'#7F5F5F',
+  16:'#FF3F00',17:'#FF9F7F',18:'#A52700',19:'#A5837F',20:'#7F1E00',
+  30:'#FF7F00',40:'#FFBF00',50:'#FFFF00',60:'#BFFF00',70:'#7FFF00',
+  80:'#3FFF00',90:'#00FF00',100:'#00FF3F',110:'#00FF7F',120:'#00FFBF',
+  130:'#00FFFF',140:'#00BFFF',150:'#007FFF',160:'#003FFF',170:'#0000FF',
+  180:'#3F00FF',190:'#7F00FF',200:'#BF00FF',210:'#FF00FF',
+  220:'#FF00BF',230:'#FF007F',240:'#FF003F',
+  250:'#1A1A1A',251:'#333333',252:'#4D4D4D',253:'#666666',254:'#808080',255:'#999999'};
+function aciColor(n){ return ACI[Math.abs(n)]||'#FFFFFF'; }
+
+// ═══════════════════════════════════════════════════════════════
+//  PARSER
+// ═══════════════════════════════════════════════════════════════
+function parseDXF(text) {
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  const P = [];
+  for (let i = 0; i+1 < lines.length; i += 2) {
+    const c = parseInt(lines[i].trim(), 10);
+    if (!isNaN(c)) P.push([c, lines[i+1].trim()]);
+  }
+
+  let i = 0;
+  const atEnd = () => i >= P.length;
+  const peek  = () => P[i];
+  const next  = () => P[i++];
+  const skip  = () => i++;
+
+  const dxf = { layers:{}, blocks:{}, entities:[] };
+
+  function skipToEndsec() {
+    while (!atEnd()) { const p=next(); if(p[0]===0&&p[1]==='ENDSEC') return; }
+  }
+
+  // ── entity reader ─────────────────────────────────────────
+  function readEntity(type) {
+    const e = { type, layer:'0', colorIndex:null };
+
+    if (type === 'LINE') {
+      e.x1=0;e.y1=0;e.x2=0;e.y2=0;
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8)  e.layer=p[1];
+        else if(p[0]===62) e.colorIndex=parseInt(p[1]);
+        else if(p[0]===10) e.x1=parseFloat(p[1]);
+        else if(p[0]===20) e.y1=parseFloat(p[1]);
+        else if(p[0]===11) e.x2=parseFloat(p[1]);
+        else if(p[0]===21) e.y2=parseFloat(p[1]);
+      }
+
+    } else if (type === 'CIRCLE') {
+      e.cx=0;e.cy=0;e.r=1;
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8)  e.layer=p[1];
+        else if(p[0]===62) e.colorIndex=parseInt(p[1]);
+        else if(p[0]===10) e.cx=parseFloat(p[1]);
+        else if(p[0]===20) e.cy=parseFloat(p[1]);
+        else if(p[0]===40) e.r=parseFloat(p[1]);
+      }
+
+    } else if (type === 'ARC') {
+      e.cx=0;e.cy=0;e.r=1;e.sa=0;e.ea=360;
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8)  e.layer=p[1];
+        else if(p[0]===62) e.colorIndex=parseInt(p[1]);
+        else if(p[0]===10) e.cx=parseFloat(p[1]);
+        else if(p[0]===20) e.cy=parseFloat(p[1]);
+        else if(p[0]===40) e.r=parseFloat(p[1]);
+        else if(p[0]===50) e.sa=parseFloat(p[1]);
+        else if(p[0]===51) e.ea=parseFloat(p[1]);
+      }
+
+    } else if (type === 'LWPOLYLINE') {
+      // LWPOLYLINE stores vertices as repeating 10/20 pairs.
+      // Bulge (code 42) after a vertex applies to the SEGMENT leaving that vertex.
+      e.closed = false;
+      e.vertices = []; // {x, y, bulge}
+      let vx = null, pendingBulge = 0;
+
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8)  e.layer=p[1];
+        else if(p[0]===62) e.colorIndex=parseInt(p[1]);
+        else if(p[0]===70) e.closed=!!(parseInt(p[1])&1);
+        else if(p[0]===10) {
+          // New vertex x — store pending bulge on the LAST vertex, then start new vertex
+          if (vx !== null && e.vertices.length > 0) {
+            // This shouldn't happen (10 without 20 first) but guard anyway
+          }
+          vx = parseFloat(p[1]);
+        }
+        else if(p[0]===20) {
+          if (vx !== null) {
+            e.vertices.push({ x: vx, y: parseFloat(p[1]), bulge: 0 });
+            vx = null;
+          }
+        }
+        else if(p[0]===42) {
+          // Bulge applies to the segment FROM the most recently added vertex
+          if (e.vertices.length > 0) {
+            e.vertices[e.vertices.length - 1].bulge = parseFloat(p[1]);
+          }
+        }
+      }
+
+    } else if (type === 'POLYLINE') {
+      e.vertices=[];e.closed=false;
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8)  e.layer=p[1];
+        else if(p[0]===62) e.colorIndex=parseInt(p[1]);
+        else if(p[0]===70) e.closed=!!(parseInt(p[1])&1);
+      }
+      while (!atEnd()) {
+        const p=peek();
+        if(p[0]===0&&p[1]==='SEQEND'){skip();break;}
+        if(p[0]===0&&p[1]==='VERTEX'){
+          skip(); let vx=0,vy=0,vb=0;
+          while(!atEnd()){const q=peek();if(q[0]===0)break;next();
+            if(q[0]===10)vx=parseFloat(q[1]);
+            else if(q[0]===20)vy=parseFloat(q[1]);
+            else if(q[0]===42)vb=parseFloat(q[1]);
+          }
+          e.vertices.push({x:vx,y:vy,bulge:vb});
+        } else skip();
+      }
+
+    } else if (type === 'SPLINE') {
+      e.degree=3;e.knots=[];e.controlPoints=[];e.fitPoints=[];
+      let cpx=null,fpx=null;
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8)  e.layer=p[1];
+        else if(p[0]===62) e.colorIndex=parseInt(p[1]);
+        else if(p[0]===71) e.degree=parseInt(p[1]);
+        else if(p[0]===40) e.knots.push(parseFloat(p[1]));
+        else if(p[0]===10) cpx=parseFloat(p[1]);
+        else if(p[0]===20&&cpx!==null){e.controlPoints.push({x:cpx,y:parseFloat(p[1])});cpx=null;}
+        else if(p[0]===11) fpx=parseFloat(p[1]);
+        else if(p[0]===21&&fpx!==null){e.fitPoints.push({x:fpx,y:parseFloat(p[1])});fpx=null;}
+      }
+
+    } else if (type === 'ELLIPSE') {
+      e.cx=0;e.cy=0;e.mx=1;e.my=0;e.ratio=1;e.sp=0;e.ep=Math.PI*2;
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8)  e.layer=p[1];
+        else if(p[0]===62) e.colorIndex=parseInt(p[1]);
+        else if(p[0]===10) e.cx=parseFloat(p[1]);
+        else if(p[0]===20) e.cy=parseFloat(p[1]);
+        else if(p[0]===11) e.mx=parseFloat(p[1]);
+        else if(p[0]===21) e.my=parseFloat(p[1]);
+        else if(p[0]===40) e.ratio=parseFloat(p[1]);
+        else if(p[0]===41) e.sp=parseFloat(p[1]);
+        else if(p[0]===42) e.ep=parseFloat(p[1]);
+      }
+
+    } else if (type === 'INSERT') {
+      e.block='';e.ix=0;e.iy=0;e.sx=1;e.sy=1;e.rot=0;
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8)  e.layer=p[1];
+        else if(p[0]===62) e.colorIndex=parseInt(p[1]);
+        else if(p[0]===2)  e.block=p[1];
+        else if(p[0]===10) e.ix=parseFloat(p[1]);
+        else if(p[0]===20) e.iy=parseFloat(p[1]);
+        else if(p[0]===41) e.sx=parseFloat(p[1]);
+        else if(p[0]===42) e.sy=parseFloat(p[1]);
+        else if(p[0]===50) e.rot=parseFloat(p[1]);
+      }
+
+    } else if (type === 'POINT') {
+      e.x=0;e.y=0;
+      while (!atEnd()) {
+        const p=peek(); if(p[0]===0) break; next();
+        if(p[0]===8) e.layer=p[1];
+        else if(p[0]===10) e.x=parseFloat(p[1]);
+        else if(p[0]===20) e.y=parseFloat(p[1]);
+      }
+
+    } else if (type === 'HATCH') {
+      // Skip hatches for now — just consume their data
+      while (!atEnd()) { const p=peek(); if(p[0]===0) break; skip(); }
+      return null;
+
+    } else {
+      while (!atEnd()) { const p=peek(); if(p[0]===0) break; skip(); }
+      return null;
+    }
+    return e;
+  }
+
+  // ── section readers ───────────────────────────────────────
+  function readHeader() {
+    while(!atEnd()){const p=peek();if(p[0]===0&&p[1]==='ENDSEC'){skip();return;}skip();}
+  }
+
+  function readTables() {
+    while(!atEnd()){
+      const p=peek();
+      if(p[0]===0&&p[1]==='ENDSEC'){skip();return;}
+      if(p[0]===0&&p[1]==='TABLE'){
+        skip();const nm=next();
+        if(nm[1]==='LAYER') readLayerTable();
+        else{while(!atEnd()){const q=peek();if(q[0]===0&&q[1]==='ENDTAB'){skip();break;}skip();}}
+      } else skip();
+    }
+  }
+
+  function readLayerTable() {
+    while(!atEnd()){
+      const p=peek();
+      if(p[0]===0&&(p[1]==='ENDTAB'||p[1]==='ENDSEC')){if(p[1]==='ENDTAB')skip();return;}
+      if(p[0]===0&&p[1]==='LAYER'){
+        skip();
+        const lay={name:'0',color:7,visible:true};
+        while(!atEnd()){const q=peek();if(q[0]===0)break;next();
+          if(q[0]===2)lay.name=q[1];
+          else if(q[0]===62){const c=parseInt(q[1]);lay.color=Math.abs(c);lay.visible=c>=0;}
+        }
+        dxf.layers[lay.name]=lay;
+      } else skip();
+    }
+  }
+
+  function readEntityList(target) {
+    while(!atEnd()){
+      const p=peek();
+      if(p[0]===0&&(p[1]==='ENDSEC'||p[1]==='ENDBLK')){skip();return;}
+      if(p[0]===0){skip();const e=readEntity(p[1]);if(e)target.push(e);}
+      else skip();
+    }
+  }
+
+  function readBlocks() {
+    while(!atEnd()){
+      const p=peek();
+      if(p[0]===0&&p[1]==='ENDSEC'){skip();return;}
+      if(p[0]===0&&p[1]==='BLOCK'){
+        skip();
+        let bname='';
+        while(!atEnd()){const q=peek();if(q[0]===0)break;next();if(q[0]===2)bname=q[1];}
+        const blk={name:bname,entities:[]};
+        dxf.blocks[bname]=blk;
+        readEntityList(blk.entities);
+      } else skip();
+    }
+  }
+
+  while(!atEnd()){
+    const p=peek(); if(!p)break;
+    if(p[0]===0&&p[1]==='EOF') break;
+    if(p[0]===0&&p[1]==='SECTION'){
+      skip();const nm=next();
+      if     (nm[1]==='HEADER')   readHeader();
+      else if(nm[1]==='TABLES')   readTables();
+      else if(nm[1]==='BLOCKS')   readBlocks();
+      else if(nm[1]==='ENTITIES') readEntityList(dxf.entities);
+      else                        skipToEndsec();
+    } else skip();
+  }
+
+  if(!dxf.layers['0']) dxf.layers['0']={name:'0',color:7,visible:true};
+  return dxf;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NURBS B-SPLINE
+// ═══════════════════════════════════════════════════════════════
+function splineToPolyline(e, steps=300) {
+  const pts = e.controlPoints.length >= 2 ? e.controlPoints : e.fitPoints;
+  if (!pts || pts.length < 2) return [];
+  const deg = Math.min(e.degree||3, pts.length-1);
+  let knots = e.knots;
+  if (!knots || knots.length < pts.length + deg + 1) {
+    knots=[];
+    const n=pts.length-1, m=n+deg+1;
+    for(let j=0;j<=m;j++){
+      if(j<=deg) knots.push(0);
+      else if(j>=m-deg) knots.push(1);
+      else knots.push((j-deg)/(m-2*deg));
+    }
+  }
+  const kMin=knots[0],kRange=knots[knots.length-1]-kMin||1;
+  const kn=knots.map(k=>(k-kMin)/kRange);
+  const out=[];
+  for(let s=0;s<=steps;s++){
+    const t=(s/steps)*(1-1e-9);
+    let span=deg;
+    for(let j=deg;j<pts.length;j++){if(t>=kn[j]&&t<kn[j+1]){span=j;break;}}
+    if(t>=kn[pts.length])span=pts.length-1;
+    const N=new Array(deg+1).fill(0); N[0]=1;
+    for(let j=1;j<=deg;j++){
+      let saved=0;
+      for(let r=0;r<j;r++){
+        const kl=kn[span-r+j],kr=kn[span-r];
+        const den=kl-kr, tmp=den===0?0:N[r]/den;
+        N[r]=saved+(kl-t)*tmp; saved=(t-kr)*tmp;
+      }
+      N[j]=saved;
+    }
+    let x=0,y=0;
+    for(let j=0;j<=deg;j++){x+=N[j]*pts[span-deg+j].x;y+=N[j]*pts[span-deg+j].y;}
+    out.push({x,y});
+  }
+  return out;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  VIEWER
+// ═══════════════════════════════════════════════════════════════
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+const vp     = document.getElementById('viewport');
+
+let dxf=null, hiddenLayers=new Set();
+let tx=0,ty=0,scale=1,bounds=null;
+
+function resize(){canvas.width=vp.clientWidth;canvas.height=vp.clientHeight;render();}
+window.addEventListener('resize',resize); resize();
+
+const W2S=(wx,wy)=>({x:tx+wx*scale, y:ty-wy*scale});
+const S2W=(sx,sy)=>({x:(sx-tx)/scale, y:-(sy-ty)/scale});
+
+function expBounds(x,y,b){
+  if(!isFinite(x)||!isFinite(y))return;
+  if(x<b.x0)b.x0=x;if(y<b.y0)b.y0=y;if(x>b.x1)b.x1=x;if(y>b.y1)b.y1=y;
+}
+
+function entityExtents(e,b){
+  switch(e.type){
+    case 'LINE': expBounds(e.x1,e.y1,b);expBounds(e.x2,e.y2,b);break;
+    case 'CIRCLE': expBounds(e.cx-e.r,e.cy-e.r,b);expBounds(e.cx+e.r,e.cy+e.r,b);break;
+    case 'ARC':    expBounds(e.cx-e.r,e.cy-e.r,b);expBounds(e.cx+e.r,e.cy+e.r,b);break;
+    case 'LWPOLYLINE':case 'POLYLINE': e.vertices.forEach(v=>expBounds(v.x,v.y,b));break;
+    case 'SPLINE': splineToPolyline(e,20).forEach(v=>expBounds(v.x,v.y,b));break;
+    case 'ELLIPSE':{const m=Math.hypot(e.mx,e.my);expBounds(e.cx-m,e.cy-m,b);expBounds(e.cx+m,e.cy+m,b);break;}
+    case 'POINT': expBounds(e.x,e.y,b);break;
+  }
+}
+
+function computeBounds(){
+  const b={x0:Infinity,y0:Infinity,x1:-Infinity,y1:-Infinity};
+  dxf.entities.forEach(e=>entityExtents(e,b));
+  Object.values(dxf.blocks).forEach(blk=>blk.entities.forEach(e=>entityExtents(e,b)));
+  if(!isFinite(b.x0)){b.x0=-100;b.y0=-100;b.x1=100;b.y1=100;}
+  b.w=b.x1-b.x0||1; b.h=b.y1-b.y0||1; bounds=b;
+}
+
+function fitView(){
+  if(!bounds)return;
+  const pad=40,vw=canvas.width-pad*2,vh=canvas.height-pad*2;
+  scale=Math.min(vw/bounds.w,vh/bounds.h);
+  tx=pad+(vw-bounds.w*scale)/2-bounds.x0*scale;
+  ty=pad+(vh-bounds.h*scale)/2+bounds.y1*scale;
+  render();
+}
+
+// Curated display palette — maps ACI colour families to a cohesive scheme
+// that looks great on dark backgrounds with glow rendering
+const DISPLAY_PALETTE = {
+  // Reds → coral
+  1:'#ff6b6b', 10:'#ff6b6b', 11:'#ffa0a0', 12:'#cc4444',
+  // Yellows → warm amber
+  2:'#ffd166', 40:'#ffd166', 50:'#ffe08a',
+  // Greens → mint
+  3:'#06d6a0', 90:'#06d6a0', 80:'#4ecdc4', 70:'#4ecdc4',
+  // Cyans → sky blue
+  4:'#74c2e8', 130:'#74c2e8', 140:'#5db8e0', 150:'#4aacdc',
+  // Blues → indigo-blue
+  5:'#7b9fff', 160:'#7b9fff', 170:'#6b8fff',
+  // Magentas → violet-pink
+  6:'#c084fc', 200:'#c084fc', 210:'#e879f9', 220:'#d946ef',
+  // White / near-white → bright off-white
+  7:'#e8edf2',
+  // Greys
+  8:'#8899aa', 9:'#aabbcc', 250:'#4a5568', 251:'#5a6878', 252:'#6a7888',
+  253:'#8a9aaa', 254:'#aabbcc', 255:'#c8d8e8',
+};
+
+function getDisplayColor(e, inherit) {
+  const ci = e.colorIndex;
+  // Explicit entity colour
+  if (ci !== null && ci !== undefined && ci !== 256 && ci !== 0) {
+    return DISPLAY_PALETTE[Math.abs(ci)] || '#e8edf2';
+  }
+  // Inherited from INSERT parent
+  if (inherit) return inherit;
+  // Layer colour
+  const l = dxf.layers[e.layer] || dxf.layers['0'];
+  if (l) return DISPLAY_PALETTE[Math.abs(l.color)] || '#e8edf2';
+  return '#e8edf2';
+}
+
+// Keep original for export colour logic
+function getColor(e,inherit){
+  const ci=e.colorIndex;
+  if(ci!==null&&ci!==undefined&&ci!==256&&ci!==0) return aciColor(ci);
+  if(inherit) return inherit;
+  const l=dxf.layers[e.layer]||dxf.layers['0'];
+  return l?aciColor(l.color):'#FFFFFF';
+}
+
+function isVisible(layerName){
+  if(hiddenLayers.has(layerName))return false;
+  const l=dxf.layers[layerName];
+  return !l||l.visible;
+}
+
+// ── draw polyline segment with optional bulge ─────────────────
+// Called with canvas path already open (moveTo done by caller or previous segment)
+function polySegment(x1,y1,x2,y2,bulge){
+  if(!bulge || Math.abs(bulge) < 1e-10){
+    const b=W2S(x2,y2); ctx.lineTo(b.x,b.y);
+  } else {
+    const arc=bulgeToArc(x1,y1,x2,y2,bulge);
+    if(!arc){const b=W2S(x2,y2);ctx.lineTo(b.x,b.y);return;}
+    const c=W2S(arc.cx,arc.cy);
+    const r=arc.r*scale;
+    // Convert world angles to canvas angles (Y-flip: negate)
+    const canvasSa=-arc.sa;
+    const canvasEa=-arc.ea;
+    // After Y-axis flip: CCW world → anticlockwise=true in canvas
+    const acw = arc.ccw ? true : false;
+    ctx.arc(c.x,c.y,r,canvasSa,canvasEa,acw);
+  }
+}
+
+function drawEntity(e,inherit){
+  if(!isVisible(e.layer||'0'))return;
+  const color=getDisplayColor(e,inherit);
+  ctx.strokeStyle=color;
+  ctx.fillStyle='transparent';
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor=color;
+  ctx.shadowBlur=4;
+
+  switch(e.type){
+
+    case 'LINE':{
+      const a=W2S(e.x1,e.y1),b=W2S(e.x2,e.y2);
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      break;
+    }
+
+    case 'CIRCLE':{
+      const c=W2S(e.cx,e.cy);
+      ctx.beginPath();ctx.arc(c.x,c.y,e.r*scale,0,Math.PI*2);ctx.stroke();
+      break;
+    }
+
+    case 'ARC':{
+      const c=W2S(e.cx,e.cy);
+      const sa=-e.sa*Math.PI/180;
+      const ea=-e.ea*Math.PI/180;
+      ctx.beginPath();ctx.arc(c.x,c.y,e.r*scale,sa,ea,true);ctx.stroke();
+      break;
+    }
+
+    case 'LWPOLYLINE':
+    case 'POLYLINE':{
+      const v=e.vertices;
+      if(!v||v.length<2)break;
+      const s=W2S(v[0].x,v[0].y);
+      ctx.beginPath();ctx.moveTo(s.x,s.y);
+      for(let k=0;k<v.length-1;k++){
+        polySegment(v[k].x,v[k].y,v[k+1].x,v[k+1].y,v[k].bulge||0);
+      }
+      if(e.closed){
+        // closing segment: from last vertex back to first
+        const last=v[v.length-1];
+        polySegment(last.x,last.y,v[0].x,v[0].y,last.bulge||0);
+        ctx.closePath();
+      }
+      ctx.stroke();
+      break;
+    }
+
+    case 'SPLINE':{
+      const pts=splineToPolyline(e,300);
+      if(pts.length<2)break;
+      const s=W2S(pts[0].x,pts[0].y);
+      ctx.beginPath();ctx.moveTo(s.x,s.y);
+      for(let k=1;k<pts.length;k++){const p=W2S(pts[k].x,pts[k].y);ctx.lineTo(p.x,p.y);}
+      ctx.stroke();
+      break;
+    }
+
+    case 'ELLIPSE':{
+      const c=W2S(e.cx,e.cy);
+      const mlen=Math.hypot(e.mx,e.my);
+      const rx=mlen*scale,ry=mlen*e.ratio*scale;
+      const rot=-Math.atan2(e.my,e.mx);
+      ctx.beginPath();
+      ctx.ellipse(c.x,c.y,rx,ry,rot,-e.ep,-e.sp,true);
+      ctx.stroke();
+      break;
+    }
+
+    case 'POINT':{
+      const p=W2S(e.x,e.y);
+      ctx.fillStyle=color;
+      ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fill();
+      break;
+    }
+
+    case 'INSERT':{
+      const blk=dxf.blocks[e.block];
+      if(!blk)break;
+      // We apply the INSERT transform by temporarily adjusting the canvas transform
+      const rot=(e.rot||0)*Math.PI/180;
+      const sx=e.sx||1,sy=e.sy||1;
+      // Save and apply transform: translate to insert point, rotate, scale
+      ctx.save();
+      // We need to work in screen space: translate insert point to screen, then rotate
+      const sp=W2S(e.ix,e.iy);
+      ctx.translate(sp.x,sp.y);
+      ctx.rotate(-rot); // negative because Y is flipped
+      ctx.scale(sx*scale,-sy*scale); // incorporate world scale, and flip Y
+      // Now draw block entities in their local coords directly (no W2S — we use raw coords)
+      const savedTx=tx,savedTy=ty,savedScale=scale;
+      tx=0;ty=0;scale=1;
+      blk.entities.forEach(be=>drawEntityRaw(be,color));
+      tx=savedTx;ty=savedTy;scale=savedScale;
+      ctx.restore();
+      break;
+    }
+  }
+}
+
+// Simplified draw for entities inside an INSERT (canvas transform already applied)
+function drawEntityRaw(e,inherit){
+  if(!isVisible(e.layer||'0'))return;
+  const color=getDisplayColor(e,inherit);
+  ctx.strokeStyle=color;ctx.fillStyle='transparent';
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor=color;ctx.shadowBlur=4;
+  switch(e.type){
+    case 'LINE':{
+      ctx.beginPath();ctx.moveTo(e.x1,e.y1);ctx.lineTo(e.x2,e.y2);ctx.stroke();break;
+    }
+    case 'CIRCLE':{
+      ctx.beginPath();ctx.arc(e.cx,e.cy,e.r,0,Math.PI*2);ctx.stroke();break;
+    }
+    case 'ARC':{
+      const sa=e.sa*Math.PI/180, ea=e.ea*Math.PI/180;
+      ctx.beginPath();ctx.arc(e.cx,e.cy,e.r,sa,ea,false);ctx.stroke();break;
+    }
+    case 'LWPOLYLINE':case 'POLYLINE':{
+      const v=e.vertices; if(!v||v.length<2)break;
+      ctx.beginPath();ctx.moveTo(v[0].x,v[0].y);
+      for(let k=1;k<v.length;k++) ctx.lineTo(v[k].x,v[k].y);
+      if(e.closed)ctx.closePath();
+      ctx.stroke();break;
+    }
+  }
+}
+
+function render(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!dxf)return;
+  dxf.entities.forEach(e=>{
+    ctx.save();
+    drawEntity(e,null);
+    ctx.restore();
+  });
+}
+
+// ── Layer sidebar ─────────────────────────────────────────────
+function buildUI(filename){
+  const cnt={};
+  const count=el=>el.forEach(e=>{cnt[e.layer]=(cnt[e.layer]||0)+1;});
+  count(dxf.entities);
+  Object.values(dxf.blocks).forEach(b=>count(b.entities));
+  const list=document.getElementById('layer-list');
+  list.innerHTML='';
+  Object.values(dxf.layers).sort((a,b)=>a.name.localeCompare(b.name)).forEach(layer=>{
+    const col=aciColor(layer.color);
+    const div=document.createElement('div');
+    div.className='layer-item'+(hiddenLayers.has(layer.name)?' hidden':'');
+    div.innerHTML=`<div class="layer-swatch" style="background:${col}"></div>
+      <span class="layer-name">${layer.name}</span>
+      <span class="layer-count">${cnt[layer.name]||0}</span>`;
+    div.addEventListener('click',()=>{
+      if(hiddenLayers.has(layer.name))hiddenLayers.delete(layer.name);
+      else hiddenLayers.add(layer.name);
+      div.classList.toggle('hidden');render();
+    });
+    list.appendChild(div);
+  });
+  const fn=filename.length>18?filename.slice(0,16)+'…':filename; document.getElementById('info-name').textContent=fn;
+  document.getElementById('info-entities').textContent=dxf.entities.length.toLocaleString();
+  const lcount=Object.keys(dxf.layers).length; document.getElementById('info-layers').textContent=lcount; document.getElementById('layers-count').textContent=lcount;
+  document.getElementById('info-blocks').textContent=Object.keys(dxf.blocks).length; const umap={'1':'in','2':'ft','4':'mm','5':'cm','6':'m'}; document.getElementById('info-units').textContent=umap[dxf.header&&dxf.header['$INSUNITS']]||'—';
+}
+
+// ── File load ─────────────────────────────────────────────────
+function loadFile(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      dxf=parseDXF(ev.target.result);
+      hiddenLayers.clear();
+      computeBounds();fitView();buildUI(file.name);
+      const ov2=document.getElementById('drop-overlay'); ov2.classList.remove('active'); ov2.classList.add('hidden');
+      document.getElementById('file-badge').classList.add('visible');
+      document.getElementById('btn-explode').disabled = false;
+    }catch(err){toast('Error: '+err.message);console.error(err);}
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('file-input').addEventListener('change',e=>{
+  if(e.target.files[0])loadFile(e.target.files[0]);e.target.value='';
+});
+const ov=document.getElementById('drop-overlay');
+vp.addEventListener('dragover',e=>{e.preventDefault();ov.classList.add('dragover'); ov.classList.add('active');});
+vp.addEventListener('dragleave',()=>{ov.classList.remove('dragover');});
+vp.addEventListener('drop',e=>{e.preventDefault();ov.classList.remove('dragover');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+
+// ── Pan & zoom ────────────────────────────────────────────────
+let panning=false,px0=0,py0=0,tx0=0,ty0=0;
+canvas.addEventListener('mousedown',e=>{panning=true;px0=e.clientX;py0=e.clientY;tx0=tx;ty0=ty;canvas.classList.add('panning');});
+window.addEventListener('mouseup',()=>{panning=false;canvas.classList.remove('panning');});
+window.addEventListener('mousemove',e=>{
+  if(panning){tx=tx0+(e.clientX-px0);ty=ty0+(e.clientY-py0);render();}
+  const r=canvas.getBoundingClientRect();
+  const w=S2W(e.clientX-r.left,e.clientY-r.top);
+  document.getElementById('coords').textContent=`X: ${w.x.toFixed(3)}  Y: ${w.y.toFixed(3)}`;
+});
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  const mx=e.clientX-r.left,my=e.clientY-r.top;
+  const f=e.deltaY<0?1.15:1/1.15;
+  tx=mx+(tx-mx)*f;ty=my+(ty-my)*f;scale*=f;render();
+},{passive:false});
+
+document.getElementById('btn-fit').addEventListener('click',fitView);
+document.getElementById('tool-fit').addEventListener('click',fitView);
+document.getElementById('tool-zoom-in').addEventListener('click',()=>{const cx=canvas.width/2,cy=canvas.height/2,f=1.5;tx=cx+(tx-cx)*f;ty=cy+(ty-cy)*f;scale*=f;render();});
+document.getElementById('tool-zoom-out').addEventListener('click',()=>{const cx=canvas.width/2,cy=canvas.height/2,f=1/1.5;tx=cx+(tx-cx)*f;ty=cy+(ty-cy)*f;scale*=f;render();});
+
+function toast(msg,success=false){const el=document.createElement('div');el.className='toast'+(success?' toast-success':'');el.textContent=msg;vp.appendChild(el);setTimeout(()=>el.remove(),4000);}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXPLODE DXF
+//  - Flatten all INSERT references into primitive entities
+//  - Move everything to layer 0
+//  - Export as DXF 2013 (AC1027)
+// ═══════════════════════════════════════════════════════════════
+
+function explodeAndExport() {
+  if (!dxf) return;
+
+  // ── 1. Flatten: collect all primitives, resolving INSERTs recursively ──
+  const flat = [];
+  let handleCounter = 1;
+  const newHandle = () => (handleCounter++).toString(16).toUpperCase();
+
+  // ── Helper: explode a LWPOLYLINE/POLYLINE into LINE and ARC primitives ──
+  function explodePolyline(verts, closed, mat) {
+    const out = [];
+    if (!verts || verts.length < 2) return out;
+    const segs = [...verts];
+    if (closed) segs.push(verts[0]); // virtual closing vertex
+
+    for (let k = 0; k < segs.length - 1; k++) {
+      const v1 = segs[k], v2 = segs[k+1];
+      const bulge = v1.bulge || 0;
+
+      // Transform both endpoints through mat
+      const {a,b,c,d,etx,ety} = mat;
+      const tp = (x,y) => ({ x: a*x+c*y+etx, y: b*x+d*y+ety });
+      const p1 = tp(v1.x, v1.y), p2 = tp(v2.x, v2.y);
+
+      if (Math.abs(bulge) < 1e-10) {
+        // Straight segment → LINE
+        out.push({ type:'LINE', layer:'0', colorIndex:null,
+          x1:p1.x, y1:p1.y, x2:p2.x, y2:p2.y });
+      } else {
+        // Bulge segment → ARC
+        // Compute arc in original (pre-transform) coords then transform centre
+        const dx = v2.x-v1.x, dy = v2.y-v1.y;
+        const d2 = Math.hypot(dx, dy);
+        if (d2 < 1e-12) continue;
+        const l = d2/2;
+        const r = (l*(bulge*bulge+1))/(2*Math.abs(bulge));
+        const h = Math.sqrt(Math.max(0, r*r - l*l));
+        const mx2 = (v1.x+v2.x)/2, my2 = (v1.y+v2.y)/2;
+        const px2 = -dy/d2, py2 = dx/d2;
+        const sign = bulge > 0 ? 1 : -1;
+        const wcx = mx2 + sign*h*px2, wcy = my2 + sign*h*py2;
+        // Transform centre
+        const sc = tp(wcx, wcy);
+        // Scale factor (uniform assumed)
+        const sf = Math.hypot(a, b);
+        const tr = r * sf;
+        // Angles in world (pre-transform)
+        let sa = Math.atan2(v1.y-wcy, v1.x-wcx) * 180/Math.PI;
+        let ea = Math.atan2(v2.y-wcy, v2.x-wcx) * 180/Math.PI;
+        // Apply rotation from matrix
+        const rotDeg = Math.atan2(b, a) * 180/Math.PI;
+        sa = ((sa + rotDeg) % 360 + 360) % 360;
+        ea = ((ea + rotDeg) % 360 + 360) % 360;
+        // DXF ARC always goes CCW from startAngle to endAngle
+        // bulge>0 = CCW in original world: write sa→ea
+        // bulge<0 = CW in original world: swap so arc goes CCW from ea→sa
+        if (bulge < 0) { const tmp = sa; sa = ea; ea = tmp; }
+        out.push({ type:'ARC', layer:'0', colorIndex:null,
+          cx:sc.x, cy:sc.y, r:tr, sa, ea });
+      }
+    }
+    return out;
+  }
+
+  function transformEntity(e, mat) {
+    const {a,b,c,d,etx,ety} = mat;
+    const tp = (x,y) => ({ x: a*x+c*y+etx, y: b*x+d*y+ety });
+    const ts = (r) => r * Math.hypot(a, b);
+    const out = { type: e.type, layer: '0', colorIndex: null };
+
+    switch (e.type) {
+      case 'LINE': {
+        const p1 = tp(e.x1, e.y1), p2 = tp(e.x2, e.y2);
+        return [{ ...out, x1:p1.x, y1:p1.y, x2:p2.x, y2:p2.y }];
+      }
+      case 'CIRCLE': {
+        const p = tp(e.cx, e.cy);
+        return [{ ...out, cx:p.x, cy:p.y, r:ts(e.r) }];
+      }
+      case 'ARC': {
+        const p = tp(e.cx, e.cy);
+        const rot = Math.atan2(b, a) * 180 / Math.PI;
+        return [{ ...out, cx:p.x, cy:p.y, r:ts(e.r),
+          sa: ((e.sa+rot)%360+360)%360, ea: ((e.ea+rot)%360+360)%360 }];
+      }
+      case 'LWPOLYLINE':
+      case 'POLYLINE':
+        return explodePolyline(e.vertices, e.closed||false, mat);
+      case 'SPLINE': {
+        const cps = (e.controlPoints||[]).map(v=>{const p=tp(v.x,v.y);return{x:p.x,y:p.y};});
+        const fps = (e.fitPoints||[]).map(v=>{const p=tp(v.x,v.y);return{x:p.x,y:p.y};});
+        return [{ ...out, degree:e.degree||3, knots:e.knots||[], controlPoints:cps, fitPoints:fps }];
+      }
+      case 'ELLIPSE': {
+        const p = tp(e.cx, e.cy);
+        return [{ ...out, cx:p.x, cy:p.y,
+          mx:a*e.mx+c*e.my, my:b*e.mx+d*e.my,
+          ratio:e.ratio, sp:e.sp, ep:e.ep }];
+      }
+      case 'POINT': {
+        const p = tp(e.x, e.y);
+        return [{ ...out, x:p.x, y:p.y }];
+      }
+      default: return [];
+    }
+  }
+
+  function identityMat() {
+    return { a:1, b:0, c:0, d:1, etx:0, ety:0 };
+  }
+
+  function composeMat(parent, child) {
+    // child applied first, then parent
+    return {
+      a:  parent.a*child.a  + parent.c*child.b,
+      b:  parent.b*child.a  + parent.d*child.b,
+      c:  parent.a*child.c  + parent.c*child.d,
+      d:  parent.b*child.c  + parent.d*child.d,
+      etx: parent.a*child.etx + parent.c*child.ety + parent.etx,
+      ety: parent.b*child.etx + parent.d*child.ety + parent.ety,
+    };
+  }
+
+  function flattenEntity(e, mat, depth) {
+    if (depth > 10) return;
+    if (e.type === 'HATCH') return; // always strip hatches from export
+    if (e.type === 'INSERT') {
+      const blk = dxf.blocks[e.block];
+      if (!blk) return;
+      const rot = (e.rot || 0) * Math.PI / 180;
+      const cos = Math.cos(rot), sin = Math.sin(rot);
+      const sx = e.sx || 1, sy = e.sy || 1;
+      const insertMat = {
+        a: cos*sx, b: sin*sx,
+        c: -sin*sy, d: cos*sy,
+        etx: e.ix, ety: e.iy
+      };
+      const combined = composeMat(mat, insertMat);
+      blk.entities.forEach(be => flattenEntity(be, combined, depth+1));
+    } else {
+      const results = transformEntity(e, mat);
+      results.forEach(r => { if (r) flat.push(r); });
+    }
+  }
+
+  // Flatten all top-level entities
+  const imat = identityMat();
+  dxf.entities.forEach(e => flattenEntity(e, imat, 0));
+
+  // ── 2. Write DXF 2013 (AC1027) ──────────────────────────────
+  const lines = [];
+  const w = (code, val) => lines.push(`${String(code).padStart(3,' ')}\n${val}`);
+
+  // HEADER
+  w(0,'SECTION'); w(2,'HEADER');
+  w(9,'$ACADVER'); w(1,'AC1027');
+  w(9,'$ACADMAINTVER'); w(70,6);
+  w(9,'$DWGCODEPAGE'); w(3,'ANSI_1252');
+  w(9,'$INSBASE'); w(10,0); w(20,0); w(30,0);
+  w(9,'$EXTMIN'); w(10,0); w(20,0); w(30,0);
+  w(9,'$EXTMAX'); w(10,0); w(20,0); w(30,0);
+  w(9,'$LIMMIN'); w(10,0); w(20,0);
+  w(9,'$LIMMAX'); w(10,420); w(20,297);
+  w(9,'$INSUNITS'); w(70,4); // mm
+  w(9,'$LTSCALE'); w(40,1.0);
+  w(9,'$CELTYPE'); w(6,'ByLayer');
+  w(9,'$CECOLOR'); w(62,256);
+  w(9,'$HANDSEED'); w(5,'FFFF'); // high enough to avoid any collision
+  w(0,'ENDSEC');
+
+  // TABLES — all 9 required tables, each record with owner (330) and all required fields
+  w(0,'SECTION'); w(2,'TABLES');
+
+  // VPORT (empty)
+  w(0,'TABLE'); w(2,'VPORT'); w(5,'8'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,0);
+  w(0,'ENDTAB');
+
+  // LTYPE — ByBlock, ByLayer, Continuous (each with owner 330->5)
+  w(0,'TABLE'); w(2,'LTYPE'); w(5,'5'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,3);
+  w(0,'LTYPE'); w(5,'14'); w(330,'5'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbLinetypeTableRecord');
+  w(2,'ByBlock'); w(70,0); w(3,''); w(72,65); w(73,0); w(40,0.0);
+  w(0,'LTYPE'); w(5,'15'); w(330,'5'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbLinetypeTableRecord');
+  w(2,'ByLayer'); w(70,0); w(3,''); w(72,65); w(73,0); w(40,0.0);
+  w(0,'LTYPE'); w(5,'16'); w(330,'5'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbLinetypeTableRecord');
+  w(2,'Continuous'); w(70,0); w(3,'Solid line'); w(72,65); w(73,0); w(40,0.0);
+  w(0,'ENDTAB');
+
+  // LAYER — record needs 330 (owner), 390 (PlotStyleName->E), 370 (lineweight)
+  w(0,'TABLE'); w(2,'LAYER'); w(5,'2'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,1);
+  w(0,'LAYER'); w(5,'10'); w(330,'2'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbLayerTableRecord');
+  w(2,'0'); w(70,0); w(62,7); w(6,'Continuous'); w(370,-3); w(390,'E');
+  w(0,'ENDTAB');
+
+  // STYLE
+  w(0,'TABLE'); w(2,'STYLE'); w(5,'3'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,1);
+  w(0,'STYLE'); w(5,'11'); w(330,'3'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbTextStyleTableRecord');
+  w(2,'Standard'); w(70,0); w(40,0); w(41,1.0); w(50,0); w(71,0); w(42,2.5); w(3,'txt'); w(4,'');
+  w(0,'ENDTAB');
+
+  // VIEW (empty)
+  w(0,'TABLE'); w(2,'VIEW'); w(5,'6'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,0);
+  w(0,'ENDTAB');
+
+  // UCS (empty)
+  w(0,'TABLE'); w(2,'UCS'); w(5,'7'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,0);
+  w(0,'ENDTAB');
+
+  // APPID — ACAD entry required
+  w(0,'TABLE'); w(2,'APPID'); w(5,'9'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,1);
+  w(0,'APPID'); w(5,'12'); w(330,'9'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbRegAppTableRecord');
+  w(2,'ACAD'); w(70,0);
+  w(0,'ENDTAB');
+
+  // DIMSTYLE — Standard entry required
+  w(0,'TABLE'); w(2,'DIMSTYLE'); w(5,'A'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,1);
+  w(100,'AcDbDimStyleTable'); w(71,0);
+  w(0,'DIMSTYLE'); w(105,'27'); w(330,'A'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbDimStyleTableRecord');
+  w(2,'Standard'); w(70,0); w(40,1.0); w(41,2.5); w(42,0.625); w(43,3.75);
+  w(44,1.25); w(45,0); w(46,0); w(47,0); w(48,0); w(140,2.5); w(141,2.5);
+  w(142,0); w(143,25.4); w(144,1.0); w(145,0); w(146,1.0); w(147,0.625);
+  w(71,0); w(72,0); w(73,1); w(74,1); w(75,0); w(76,0); w(77,0); w(78,8);
+  w(170,0); w(171,2); w(172,0); w(173,0); w(174,0); w(175,0); w(176,0); w(177,0); w(178,0);
+  w(0,'ENDTAB');
+
+  // BLOCK_RECORD — *Model_Space and *Paper_Space with owner 330->1
+  w(0,'TABLE'); w(2,'BLOCK_RECORD'); w(5,'1'); w(330,'0'); w(100,'AcDbSymbolTable'); w(70,2);
+  w(0,'BLOCK_RECORD'); w(5,'1F'); w(330,'1'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbBlockTableRecord');
+  w(2,'*Model_Space'); w(340,'0'); w(70,0); w(280,1); w(281,0);
+  w(0,'BLOCK_RECORD'); w(5,'17'); w(330,'1'); w(100,'AcDbSymbolTableRecord'); w(100,'AcDbBlockTableRecord');
+  w(2,'*Paper_Space'); w(340,'0'); w(70,0); w(280,1); w(281,0);
+  w(0,'ENDTAB');
+
+  w(0,'ENDSEC');
+
+  // BLOCKS — required *Model_Space and *Paper_Space stubs with correct owners
+  w(0,'SECTION'); w(2,'BLOCKS');
+  w(0,'BLOCK'); w(5,'20'); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbBlockBegin');
+  w(2,'*Model_Space'); w(70,0); w(10,0); w(20,0); w(30,0); w(3,'*Model_Space'); w(1,'');
+  w(0,'ENDBLK'); w(5,'21'); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbBlockEnd');
+  w(0,'BLOCK'); w(5,'1C'); w(330,'17'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbBlockBegin');
+  w(2,'*Paper_Space'); w(70,0); w(10,0); w(20,0); w(30,0); w(3,'*Paper_Space'); w(1,'');
+  w(0,'ENDBLK'); w(5,'1D'); w(330,'17'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbBlockEnd');
+  w(0,'ENDSEC');
+
+  // ENTITIES
+  w(0,'SECTION'); w(2,'ENTITIES');
+
+  const fmt = n => {
+    if (Number.isInteger(n)) return n.toString();
+    // Use up to 10 significant digits, strip trailing zeros
+    return parseFloat(n.toPrecision(10)).toString();
+  };
+
+  // Entity handles must be unique across the whole file.
+  // Static table/block handles go up to 0x27, so start entities at 0x100.
+  let nextHandle = 0x100;
+  const eh = () => (nextHandle++).toString(16).toUpperCase();
+
+  flat.forEach(e => {
+    switch (e.type) {
+      case 'LINE':
+        w(0,'LINE'); w(5,eh()); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbLine');
+        w(10,fmt(e.x1)); w(20,fmt(e.y1)); w(30,0);
+        w(11,fmt(e.x2)); w(21,fmt(e.y2)); w(31,0);
+        break;
+      case 'CIRCLE':
+        w(0,'CIRCLE'); w(5,eh()); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbCircle');
+        w(10,fmt(e.cx)); w(20,fmt(e.cy)); w(30,0);
+        w(40,fmt(e.r));
+        break;
+      case 'ARC':
+        w(0,'ARC'); w(5,eh()); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbCircle');
+        w(10,fmt(e.cx)); w(20,fmt(e.cy)); w(30,0);
+        w(40,fmt(e.r));
+        w(100,'AcDbArc');
+        w(50,fmt(((e.sa%360)+360)%360));
+        w(51,fmt(((e.ea%360)+360)%360));
+        break;
+      case 'LWPOLYLINE': {
+        const verts = e.vertices;
+        w(0,'LWPOLYLINE'); w(5,eh()); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbPolyline');
+        w(90,verts.length);
+        w(70, e.closed ? 1 : 0);
+        w(43,0);
+        verts.forEach(v => {
+          w(10,fmt(v.x)); w(20,fmt(v.y));
+          if (v.bulge && Math.abs(v.bulge) > 1e-10) w(42,fmt(v.bulge));
+        });
+        break;
+      }
+      case 'SPLINE': {
+        const pts = e.controlPoints && e.controlPoints.length > 0
+          ? e.controlPoints : e.fitPoints;
+        if (!pts || pts.length < 2) break;
+        w(0,'SPLINE'); w(5,eh()); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbSpline');
+        w(210,0); w(220,0); w(230,1);
+        w(70, 8);
+        w(71, e.degree||3);
+        w(72, (e.knots||[]).length);
+        w(73, pts.length);
+        w(74, 0);
+        (e.knots||[]).forEach(k => w(40,fmt(k)));
+        pts.forEach(p => { w(10,fmt(p.x)); w(20,fmt(p.y)); w(30,0); });
+        break;
+      }
+      case 'ELLIPSE':
+        w(0,'ELLIPSE'); w(5,eh()); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbEllipse');
+        w(10,fmt(e.cx)); w(20,fmt(e.cy)); w(30,0);
+        w(11,fmt(e.mx)); w(21,fmt(e.my)); w(31,0);
+        w(40,fmt(e.ratio));
+        w(41,fmt(e.sp)); w(42,fmt(e.ep));
+        break;
+      case 'POINT':
+        w(0,'POINT'); w(5,eh()); w(330,'1F'); w(8,'0'); w(100,'AcDbEntity'); w(100,'AcDbPoint');
+        w(10,fmt(e.x)); w(20,fmt(e.y)); w(30,0);
+        break;
+    }
+  });
+
+  w(0,'ENDSEC');
+
+  // OBJECTS — required section. Without it AutoCAD auto-creates objects
+  // starting at handle 2, colliding with the LAYER table.
+  // Handle E = ACDBDICTIONARYWDFLT (plot style name dictionary, owner=C)
+  //   contains entry "Normal" -> handle F
+  // Handle F = ACDBPLACEHOLDER (the actual plot style, owner=E)
+  // LAYER records' group 390 points to E (the dictionary, not the placeholder)
+  w(0,'SECTION'); w(2,'OBJECTS');
+  // Root named objects dictionary (handle C, owner 0)
+  w(0,'DICTIONARY'); w(5,'C'); w(330,'0'); w(100,'AcDbDictionary'); w(281,1);
+  w(3,'ACAD_GROUP');         w(350,'D');
+  w(3,'ACAD_PLOTSTYLENAME'); w(350,'E');
+  // ACAD_GROUP dictionary (empty)
+  w(0,'DICTIONARY'); w(5,'D'); w(330,'C'); w(100,'AcDbDictionary'); w(281,1);
+  // ACAD_PLOTSTYLENAME = ACDBDICTIONARYWDFLT containing "Normal"->F
+  w(0,'ACDBDICTIONARYWDFLT'); w(5,'E'); w(330,'C');
+  w(100,'AcDbDictionary'); w(281,1);
+  w(3,'Normal'); w(350,'F');
+  w(100,'AcDbDictionaryWithDefault'); w(340,'F');
+  // The actual placeholder at handle F
+  w(0,'ACDBPLACEHOLDER'); w(5,'F'); w(330,'E');
+  w(0,'ENDSEC');
+
+  w(0,'EOF');
+
+  // ── 3. Download ──────────────────────────────────────────────
+  const text = lines.join('\n');
+  const blob = new Blob([text], { type: 'application/dxf' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const origName = (document.getElementById('info-name').textContent || 'output').replace(/…$/, '');
+  const baseName = origName.replace(/\.dxf$/i, '');
+  a.href     = url;
+  a.download = `${baseName}_exploded.dxf`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`Exported ${flat.length} entities → ${baseName}_exploded.dxf`, true);
+}
+
+document.getElementById('btn-explode').addEventListener('click', explodeAndExport);
+</script>
+</body>
+</html>
+
+</body>
+</html>
