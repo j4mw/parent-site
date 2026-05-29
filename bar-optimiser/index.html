@@ -280,7 +280,11 @@ textarea.field-input {
 .cut-list { display: flex; flex-direction: column; gap: 4px; }
 
 .cut-row {
-  display: flex; align-items: center; gap: 6px;
+  display: grid;
+  grid-template-columns: 16px 1fr 52px 24px;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
 .cut-row-num {
@@ -303,6 +307,22 @@ textarea.field-input {
 }
 .cut-row-input:focus { border-color: rgba(125,211,252,0.5); }
 .cut-row-input::placeholder { color: var(--text3); }
+
+
+.cut-row-qty {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 6px;
+  outline: none;
+  transition: border-color 0.15s;
+  text-align: center;
+}
+.cut-row-qty:focus { border-color: rgba(125,211,252,0.5); }
 
 .cut-row-del {
   width: 24px; height: 24px; flex-shrink: 0;
@@ -758,6 +778,12 @@ textarea.field-input {
           Cut List
           <span id="cut-count-badge" class="layers-count" style="opacity:0">0</span>
         </div>
+        <div style="display:grid;grid-template-columns:16px 1fr 52px 24px;gap:4px;margin-bottom:4px;">
+          <span></span>
+          <span style="font-size:9px;color:var(--text3);font-family:var(--font-mono);">length</span>
+          <span style="font-size:9px;color:var(--text3);font-family:var(--font-mono);text-align:center;">qty</span>
+          <span></span>
+        </div>
         <div class="cut-list" id="cut-list"></div>
         <button class="cut-add-btn" id="btn-add-cut">
           <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 1v10M1 6h10"/></svg>
@@ -1032,7 +1058,7 @@ function renderResults(result, stockLength, allowance) {
 }
 
 // ── Cut list row management ──────────────────────────────────────
-function addCutRow(value = '') {
+function addCutRow(value = '', qty = '') {
   const list = document.getElementById('cut-list');
   const idx  = list.children.length + 1;
 
@@ -1041,6 +1067,7 @@ function addCutRow(value = '') {
   row.innerHTML = `
     <span class="cut-row-num">${idx}</span>
     <input class="cut-row-input" type="number" min="1" placeholder="e.g. 2100" value="${value}" />
+    <input class="cut-row-qty" type="number" min="1" placeholder="qty" value="${qty || 1}" title="Quantity" />
     <button class="cut-row-del" tabindex="-1" title="Remove">
       <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 2l8 8M10 2l-8 8"/></svg>
     </button>`;
@@ -1052,19 +1079,15 @@ function addCutRow(value = '') {
     updateCutCountBadge();
   });
 
-  // Tab/Enter: move to next row, or create one if on last
-  row.querySelector('input').addEventListener('keydown', e => {
-    if (e.key === 'Enter' || (e.key === 'Tab' && !e.shiftKey)) {
+  // Tab/Enter on length → next row's length (skip qty), or add new row
+  row.querySelector('.cut-row-input').addEventListener('keydown', e => {
+    if (e.key === 'Tab' && !e.shiftKey || e.key === 'Enter') {
       e.preventDefault();
       const rows = Array.from(document.querySelectorAll('.cut-row-input'));
       const idx  = rows.indexOf(e.target);
-      if (idx < rows.length - 1) {
-        rows[idx + 1].focus();
-      } else {
-        addCutRow();
-      }
+      if (idx < rows.length - 1) { rows[idx + 1].focus(); }
+      else { addCutRow(); }
     }
-    // Shift+Tab: move to previous row
     if (e.key === 'Tab' && e.shiftKey) {
       const rows = Array.from(document.querySelectorAll('.cut-row-input'));
       const idx  = rows.indexOf(e.target);
@@ -1072,7 +1095,23 @@ function addCutRow(value = '') {
     }
   });
 
-  row.querySelector('input').addEventListener('input', updateCutCountBadge);
+  // Qty field: Tab moves to next length, Shift+Tab back to this row's length
+  row.querySelector('.cut-row-qty').addEventListener('keydown', e => {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      const rows = Array.from(document.querySelectorAll('.cut-row-input'));
+      const idx  = rows.indexOf(row.querySelector('.cut-row-input'));
+      if (idx < rows.length - 1) { rows[idx + 1].focus(); }
+      else { addCutRow(); }
+    }
+    if (e.key === 'Tab' && e.shiftKey) {
+      e.preventDefault();
+      row.querySelector('.cut-row-input').focus();
+    }
+  });
+
+  row.querySelector('.cut-row-input').addEventListener('input', updateCutCountBadge);
+  row.querySelector('.cut-row-qty').addEventListener('input', updateCutCountBadge);
 
   list.appendChild(row);
   row.querySelector('input').focus();
@@ -1091,11 +1130,21 @@ function updateCutCountBadge() {
   badge.textContent = vals.length;
   badge.style.opacity = vals.length > 0 ? '1' : '0';
 }
+// total unique rows (for display hint)
+function getCutRowCount() {
+  return Array.from(document.querySelectorAll('.cut-row-input')).filter(i => parseFloat(i.value) > 0).length;
+}
 
 function getCutLengths() {
-  return Array.from(document.querySelectorAll('.cut-row-input'))
-    .map(i => parseFloat(i.value))
-    .filter(n => n > 0);
+  const expanded = [];
+  Array.from(document.getElementById('cut-list').querySelectorAll('.cut-row')).forEach(row => {
+    const len = parseFloat(row.querySelector('.cut-row-input').value);
+    const qty = parseInt(row.querySelector('.cut-row-qty').value) || 1;
+    if (len > 0) {
+      for (let i = 0; i < qty; i++) expanded.push(len);
+    }
+  });
+  return expanded;
 }
 
 // Start with 3 empty rows
