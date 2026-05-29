@@ -213,6 +213,19 @@ textarea.field-input {
   font-size: 11px; color: var(--text); font-family: var(--font-mono);
 }
 
+
+.bar-qty-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(125,211,252,0.12);
+  border: 1px solid rgba(125,211,252,0.25);
+  border-radius: 4px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+}
+
 .bar-waste-badge {
   margin-left: auto;
   font-size: 10px; font-family: var(--font-mono);
@@ -935,12 +948,30 @@ const SEG_TEXT_COLOURS = [
 ];
 
 // ── Rendering ────────────────────────────────────────────────────
-function makeBarCard(bar, idx, trackId) {
+// Group identical cut plans — same sorted cuts & waste = same bar
+function deduplicateBars(bars) {
+  const groups = [];
+  bars.forEach(bar => {
+    const key = [...bar.cuts].sort((a,b)=>a-b).join(',') + '|' + Math.round(bar.waste);
+    const existing = groups.find(g => g.key === key && g.bar.isOffcut === bar.isOffcut);
+    if (existing) {
+      existing.qty++;
+    } else {
+      groups.push({ key, bar, qty: 1 });
+    }
+  });
+  return groups;
+}
+
+function makeBarCard(bar, idx, trackId, qty) {
   const barLength  = bar.barLength;
   const waste      = bar.waste;
   const wasteFrac  = waste / barLength;
   const wasteClass = wasteFrac < 0.05 ? 'waste-low' : wasteFrac < 0.15 ? 'waste-med' : 'waste-high';
   const isOffcut   = bar.isOffcut;
+  const qtyBadge   = qty > 1
+    ? `<div class="bar-qty-badge">×${qty}</div>`
+    : '';
 
   const card = document.createElement('div');
   card.className = 'bar-card' + (isOffcut ? ' bar-card-offcut' : '');
@@ -957,6 +988,7 @@ function makeBarCard(bar, idx, trackId) {
     <div class="bar-header">
       ${labelHtml}
       ${nameHtml}
+      ${qtyBadge}
       <div class="bar-waste-badge ${wasteClass}">waste ${Math.round(waste)}mm</div>
     </div>
     <div class="bar-visual">
@@ -1030,25 +1062,26 @@ function renderResults(result, stockLength, allowance) {
 
   el.querySelectorAll('.bar-card, .results-section-label').forEach(e => e.remove());
 
-  // Offcuts section
+  // Offcuts section — deduplicated
   if (result.offcutResults.length > 0) {
     const lbl = document.createElement('div');
     lbl.className = 'results-section-label offcut-label';
     lbl.textContent = `Offcuts used (${result.offcutResults.length})`;
     el.appendChild(lbl);
-    result.offcutResults.forEach((bar, i) => {
-      el.appendChild(makeBarCard(bar, i+1, `track-oc-${i}`));
+    deduplicateBars(result.offcutResults).forEach((g, i) => {
+      el.appendChild(makeBarCard(g.bar, i+1, `track-oc-${i}`, g.qty));
     });
   }
 
-  // New stock section
+  // New stock section — deduplicated
   if (result.newBarResults.length > 0) {
+    const groups = deduplicateBars(result.newBarResults);
     const lbl = document.createElement('div');
     lbl.className = 'results-section-label newbar-label';
-    lbl.textContent = `New stock required (${result.newBarResults.length})`;
+    lbl.textContent = `New stock required (${result.newBarResults.length} bar${result.newBarResults.length !== 1 ? 's' : ''}, ${groups.length} unique pattern${groups.length !== 1 ? 's' : ''})`;
     el.appendChild(lbl);
-    result.newBarResults.forEach((bar, i) => {
-      el.appendChild(makeBarCard(bar, i+1, `track-nb-${i}`));
+    groups.forEach((g, i) => {
+      el.appendChild(makeBarCard(g.bar, i+1, `track-nb-${i}`, g.qty));
     });
   }
 
@@ -1312,54 +1345,78 @@ document.getElementById('btn-print').addEventListener('click', function() {
       ${rects}${lbls}
     </svg>`;
 
-    sections += `<div class="bar-row${isOC?' oc':''}">
-      <div class="bar-hdr">
-        <b>${idxEl.textContent.trim()}</b>
-        <span class="bsum">${sumEl.textContent.trim()}</span>
-        <span class="bwst">${wstEl.textContent.trim()}</span>
-      </div>
-      ${svg}
-    </div>`;
+    const qtyEl  = header.querySelector('.bar-qty-badge');
+    const qtyNum = qtyEl ? parseInt(qtyEl.textContent.replace('×','')) : 1;
+    const qtyStr = qtyNum + ' bar' + (qtyNum !== 1 ? 's' : '') + ' required';
+    const rowClass = 'bar-row' + (isOC ? ' oc' : '');
+    sections += '<div class="' + rowClass + '">'
+      + '<div class="bar-hdr">'
+      + '<span class="bar-id">' + idxEl.textContent.trim() + '</span>'
+      + '<span class="bsum">' + sumEl.textContent.trim() + '</span>'
+      + '<span class="bqty">' + qtyStr + '</span>'
+      + '<span class="bwst">' + wstEl.textContent.trim() + '</span>'
+      + '</div>'
+      + svg
+      + '</div>';
   });
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cut Report</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;padding:20px 24px;max-width:800px;margin:0 auto}
-    h1{font-size:14px;font-weight:700;margin-bottom:2px}
-    .meta{font-size:10px;color:#555;margin-bottom:12px}
-    .stats{display:flex;gap:20px;padding:7px 0;border-top:2px solid #000;border-bottom:1px solid #bbb;margin-bottom:16px}
-    .si{display:flex;flex-direction:column}
-    .sl{font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:#666}
-    .sv{font-size:14px;font-weight:700}
-    .section-lbl{font-size:8.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid #000;padding:6px 0 2px;margin:6px 0 4px}
-    .bar-row{margin-bottom:8px;page-break-inside:avoid}
-    .bar-hdr{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
-    .bar-hdr b{min-width:28px;font-size:11px}
-    .bsum{flex:1;font-size:9.5px;color:#333}
-    .bwst{font-size:9.5px;color:#555;white-space:nowrap}
-    .legend{display:flex;gap:14px;margin-top:12px;font-size:9px;color:#555;padding-top:8px;border-top:1px solid #ddd}
-    .li{display:flex;align-items:center;gap:4px}
-    .ls{width:14px;height:9px;border:1px solid #888;flex-shrink:0}
-    .footer{margin-top:12px;font-size:8px;color:#aaa;padding-top:6px;border-top:1px solid #eee}
-    @media print{body{padding:8px}@page{margin:10mm;size:A4}}
-  </style></head><body>
-  <h1>Bar Optimiser — Cut Report</h1>
-  <div class="meta">Stock: ${barLength}mm · Kerf: ${kerf}mm · ${new Date().toLocaleDateString()}</div>
-  <div class="stats">
-    <div class="si"><span class="sl">New bars</span><span class="sv">${statBars}</span></div>
-    <div class="si"><span class="sl">Offcuts used</span><span class="sv">${statOC}</span></div>
-    <div class="si"><span class="sl">Total cuts</span><span class="sv">${statCuts}</span></div>
-    <div class="si"><span class="sl">Avg waste</span><span class="sv">${statWaste}</span></div>
-  </div>
-  ${sections}
-  <div class="legend">
-    <div class="li"><div class="ls" style="background:repeating-linear-gradient(45deg,#999,#999 1px,#fff 1px,#fff 4px)"></div>Cut</div>
-    <div class="li"><div class="ls" style="background:#222;border-color:#222"></div>Kerf</div>
-    <div class="li"><div class="ls" style="border-style:dashed"></div>Waste</div>
-  </div>
-  <div class="footer">0layer · Bar Optimiser · © James Wright 2026</div>
-  </body></html>`;
+  const date = new Date().toLocaleDateString();
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cut Report</title>'
+    + '<style>'
+    + '*{margin:0;padding:0;box-sizing:border-box}'
+    + 'body{font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;padding:20px 24px;max-width:800px;margin:0 auto}'
+    + 'h1{font-size:14px;font-weight:700;margin-bottom:2px}'
+    + '.meta{font-size:10px;color:#555;margin-bottom:12px}'
+    + '.stats{display:flex;gap:20px;padding:7px 0;border-top:2px solid #000;border-bottom:1px solid #bbb;margin-bottom:16px;flex-wrap:wrap}'
+    + '.si{display:flex;flex-direction:column;min-width:80px}'
+    + '.sl{font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:#666}'
+    + '.sv{font-size:14px;font-weight:700}'
+    + '.section-lbl{font-size:8.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;border-bottom:2px solid #000;padding:8px 0 3px;margin:12px 0 6px;page-break-after:avoid}'
+    + '.bar-row{margin-bottom:10px;page-break-inside:avoid}'
+    + '.bar-hdr{display:grid;grid-template-columns:32px 1fr auto auto;gap:8px;align-items:center;margin-bottom:4px}'
+    + '.bar-id{font-size:11px;font-weight:700}'
+    + '.bsum{font-size:9.5px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    + '.bqty{font-size:10px;font-weight:700;background:#f0f0f0;border:1px solid #bbb;padding:1px 8px;border-radius:3px;white-space:nowrap}'
+    + '.bwst{font-size:9.5px;color:#666;white-space:nowrap}'
+    + '.bar-row.oc .bqty{background:#e8f4fd;border-color:#99b}'
+    + '.legend{display:flex;gap:14px;margin-top:14px;font-size:9px;color:#555;padding-top:8px;border-top:1px solid #ddd}'
+    + '.li{display:flex;align-items:center;gap:4px}'
+    + '.ls{width:14px;height:9px;border:1px solid #888;flex-shrink:0}'
+    + '.footer{margin-top:14px;font-size:8px;color:#aaa;padding-top:6px;border-top:1px solid #eee;display:flex;justify-content:space-between}'
+    + '.print-hdr{display:none}'
+    + '@media print{'
+    +   'body{padding:4px}'
+    +   '@page{margin:12mm;size:A4}'
+    +   '.print-hdr{display:flex;justify-content:space-between;font-size:8px;color:#666;border-bottom:1px solid #ddd;padding-bottom:4px;margin-bottom:12px;position:fixed;top:0;left:0;right:0;background:#fff;padding:6px 12mm 4px}'
+    +   '.content{margin-top:28px}'
+    +   '.footer{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:4px 12mm;border-top:1px solid #eee;font-size:8px;color:#aaa;display:flex;justify-content:space-between}'
+    + '}'
+    + '</style></head><body>'
+    + '<div class="print-hdr">'
+    +   '<span>Bar Optimiser — Cut Report &nbsp;&middot;&nbsp; Stock: ' + barLength + 'mm &nbsp;&middot;&nbsp; Kerf: ' + kerf + 'mm</span>'
+    +   '<span>' + date + '</span>'
+    + '</div>'
+    + '<div class="content">'
+    + '<h1>Bar Optimiser &mdash; Cut Report</h1>'
+    + '<div class="meta">Stock: ' + barLength + 'mm &nbsp;&middot;&nbsp; Kerf: ' + kerf + 'mm &nbsp;&middot;&nbsp; ' + date + '</div>'
+    + '<div class="stats">'
+    +   '<div class="si"><span class="sl">New bars needed</span><span class="sv">' + statBars + '</span></div>'
+    +   '<div class="si"><span class="sl">Offcuts used</span><span class="sv">' + statOC + '</span></div>'
+    +   '<div class="si"><span class="sl">Total cuts</span><span class="sv">' + statCuts + '</span></div>'
+    +   '<div class="si"><span class="sl">Avg waste</span><span class="sv">' + statWaste + '</span></div>'
+    + '</div>'
+    + sections
+    + '<div class="legend">'
+    +   '<div class="li"><div class="ls" style="background:repeating-linear-gradient(45deg,#999,#999 1px,#fff 1px,#fff 4px)"></div>Cut piece</div>'
+    +   '<div class="li"><div class="ls" style="background:#222;border-color:#222"></div>Kerf</div>'
+    +   '<div class="li"><div class="ls" style="border-style:dashed"></div>Waste</div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="footer">'
+    +   '<span>0layer &middot; Bar Optimiser &middot; &copy; James Wright 2026</span>'
+    +   '<span>Use Ctrl+P to print</span>'
+    + '</div>'
+    + '</body></html>';
 
   const w = window.open('', '_blank', 'width=860,height=700');
   w.document.write(html);
