@@ -1,372 +1,318 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>0layer</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      *,
-      *::before,
-      *::after {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>0layer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-      :root {
-        --bg: #0d0d0d;
-        --surface: #161616;
-        --surface2: #1e1e1e;
-        --border: rgba(255, 255, 255, 0.08);
-        --border2: rgba(255, 255, 255, 0.14);
-        --accent: #6ee7b7;
-        --accent2: #34d399;
-        --text: #f4f4f4;
-        --text2: #c0c0c0;
-        --text3: #707070;
-        --font-mono: 'Geist Mono', monospace;
-        --font-sans: 'Geist', sans-serif;
-      }
+    :root {
+      --bg:       #0d0d0d;
+      --surface:  #161616;
+      --surface2: #1e1e1e;
+      --border:   rgba(255,255,255,0.08);
+      --border2:  rgba(255,255,255,0.14);
+      --accent:     #f97316;
+      --accent2:    #ea580c;
+      --text:     #f4f4f4;
+      --text2:    #c0c0c0;
+      --text3:    #707070;
+      --font-mono: 'Geist Mono', monospace;
+      --font-sans: 'Geist', sans-serif;
+    }
 
-      html,
-      body {
-        min-height: 100vh;
-        background: var(--bg);
-        color: var(--text);
-        font-family: var(--font-sans);
-        font-size: 13px;
-        -webkit-font-smoothing: antialiased;
-      }
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+    }
 
-      /* ── Background grid ── */
-      body {
-        background-image:
-          linear-gradient(rgba(99, 179, 237, 0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(99, 179, 237, 0.04) 1px, transparent 1px),
-          linear-gradient(rgba(99, 179, 237, 0.015) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(99, 179, 237, 0.015) 1px, transparent 1px);
-        background-size:
-          160px 160px,
-          160px 160px,
-          32px 32px,
-          32px 32px;
-        background-color: #080b0f;
-      }
+    /* ── Background grid ── */
+    body {
+      background-image:
+        linear-gradient(rgba(249,115,22,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(249,115,22,0.04) 1px, transparent 1px),
+        linear-gradient(rgba(249,115,22,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(249,115,22,0.015) 1px, transparent 1px);
+      background-size: 160px 160px, 160px 160px, 32px 32px, 32px 32px;
+      background-color: #080b0f;
+    }
 
-      /* ── Header ── */
-      header {
-        height: 52px;
-        display: flex;
-        align-items: center;
-        padding: 0 24px;
-        gap: 12px;
-        border-bottom: 1px solid var(--border);
-        background: var(--surface);
-      }
+    /* ── Header ── */
+    header {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
 
-      .wordmark {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        letter-spacing: -0.02em;
-        color: var(--text);
-      }
+    .wordmark {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
 
-      .wordmark-icon {
-        width: 26px;
-        height: 26px;
-        background: var(--accent);
-        border-radius: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .wordmark-icon svg {
-        width: 13px;
-        height: 13px;
-      }
+    .wordmark-icon {
+      width: 26px; height: 26px;
+      background: var(--accent);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wordmark-icon svg { width: 13px; height: 13px; }
 
-      .header-divider {
-        width: 1px;
-        height: 20px;
-        background: var(--border2);
-      }
+    .header-divider { width: 1px; height: 20px; background: var(--border2); }
 
-      .header-sub {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--text3);
-      }
+    .header-sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text3);
+    }
 
-      /* ── Main ── */
-      main {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 48px 24px;
-      }
+    /* ── Main ── */
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
 
-      .page-label {
-        font-size: 10px;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--text3);
-        font-family: var(--font-mono);
-        margin-bottom: 8px;
-      }
+    .page-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text3);
+      font-family: var(--font-mono);
+      margin-bottom: 8px;
+    }
 
-      h1 {
-        font-size: 28px;
-        font-weight: 600;
-        letter-spacing: -0.03em;
-        color: var(--text);
-        margin-bottom: 8px;
-        line-height: 1.2;
-      }
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
 
-      .page-desc {
-        font-size: 13px;
-        color: var(--text2);
-        margin-bottom: 40px;
-        line-height: 1.6;
-      }
+    .page-desc {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
 
-      /* ── Tool grid ── */
-      .tools-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 12px;
-      }
+    /* ── Tool grid ── */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
 
-      .tool-card {
-        display: block;
-        text-decoration: none;
-        background: var(--surface);
-        border: 1px solid var(--border2);
-        border-radius: 8px;
-        padding: 20px;
-        transition: all 0.15s ease;
-        position: relative;
-        overflow: hidden;
-      }
+    .tool-card {
+      display: block;
+      text-decoration: none;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 20px;
+      transition: all 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
 
-      .tool-card::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          135deg,
-          rgba(110, 231, 183, 0.04) 0%,
-          transparent 60%
-        );
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(249,115,22,0.04) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
 
-      .tool-card:hover {
-        border-color: rgba(110, 231, 183, 0.3);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-      }
-      .tool-card:hover::before {
-        opacity: 1;
-      }
+    .tool-card:hover {
+      border-color: rgba(249,115,22,0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    .tool-card:hover::before { opacity: 1; }
 
-      .tool-card-icon {
-        width: 36px;
-        height: 36px;
-        background: var(--surface2);
-        border: 1px solid var(--border2);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 14px;
-      }
-      .tool-card-icon svg {
-        width: 18px;
-        height: 18px;
-        color: var(--accent);
-      }
+    .tool-card-icon {
+      width: 36px; height: 36px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .tool-card-icon svg { width: 18px; height: 18px; color: var(--accent); }
 
-      .tool-card-name {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 6px;
-        letter-spacing: -0.01em;
-      }
+    .tool-card-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
 
-      .tool-card-desc {
-        font-size: 12px;
-        color: var(--text2);
-        line-height: 1.6;
-        margin-bottom: 16px;
-      }
+    .tool-card-desc {
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
 
-      .tool-card-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
+    .tool-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-      .tool-card-tag {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--text3);
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        padding: 2px 8px;
-        border-radius: 4px;
-      }
+    .tool-card-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text3);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
 
-      .tool-card-arrow {
-        color: var(--text3);
-        transition: all 0.15s;
-        display: flex;
-        align-items: center;
-      }
-      .tool-card:hover .tool-card-arrow {
-        color: var(--accent);
-        transform: translateX(3px);
-      }
-      .tool-card-arrow svg {
-        width: 14px;
-        height: 14px;
-      }
+    .tool-card-arrow {
+      color: var(--text3);
+      transition: all 0.15s;
+      display: flex; align-items: center;
+    }
+    .tool-card:hover .tool-card-arrow {
+      color: var(--accent);
+      transform: translateX(3px);
+    }
+    .tool-card-arrow svg { width: 14px; height: 14px; }
 
-      /* ── Footer ── */
-      footer {
-        text-align: center;
-        padding: 32px 24px;
-        font-size: 11px;
-        color: var(--text3);
-        font-family: var(--font-mono);
-        border-top: 1px solid var(--border);
-        margin-top: 40px;
-      }
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 11px;
+      color: var(--text3);
+      font-family: var(--font-mono);
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
 
-      /* ── Responsive ── */
-      @media (max-width: 480px) {
-        main {
-          padding: 32px 16px;
-        }
-        h1 {
-          font-size: 22px;
-        }
-        .tools-grid {
-          grid-template-columns: 1fr;
-        }
-        header {
-          padding: 0 16px;
-        }
-        .header-sub {
-          display: none;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <div class="wordmark">
-        <div class="wordmark-icon">
-          <svg viewBox="0 0 13 13" fill="none">
-            <rect x="1" y="1" width="4" height="4" rx="1" fill="#0d0d0d" />
-            <rect x="8" y="1" width="4" height="4" rx="1" fill="#0d0d0d" />
-            <rect x="1" y="8" width="4" height="4" rx="1" fill="#0d0d0d" />
-            <rect x="8" y="8" width="4" height="4" rx="1" fill="#0d0d0d" />
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      main { padding: 32px 16px; }
+      h1 { font-size: 22px; }
+      .tools-grid { grid-template-columns: 1fr; }
+      header { padding: 0 16px; }
+      .header-sub { display: none; }
+    }
+
+    /* ── Per-tool card colours ── */
+    .tool-card-dxf { --card-accent: #fbbf24; --card-accent-rgb: 251,191,36; }
+    .tool-card-bar { --card-accent: #7dd3fc; --card-accent-rgb: 125,211,252; }
+
+    .tool-card-dxf .tool-card-icon,
+    .tool-card-bar .tool-card-icon {
+      border-color: rgba(var(--card-accent-rgb), 0.2);
+    }
+    .tool-card-dxf .tool-card-icon svg,
+    .tool-card-bar .tool-card-icon svg { color: var(--card-accent); }
+
+    .tool-card-dxf:hover,
+    .tool-card-bar:hover { border-color: rgba(var(--card-accent-rgb), 0.35); }
+
+    .tool-card-dxf::before { background: linear-gradient(135deg, rgba(var(--card-accent-rgb), 0.06) 0%, transparent 60%); }
+    .tool-card-bar::before { background: linear-gradient(135deg, rgba(var(--card-accent-rgb), 0.06) 0%, transparent 60%); }
+
+    .tool-card-dxf .tool-card-tag,
+    .tool-card-bar .tool-card-tag {
+      color: var(--card-accent);
+      border-color: rgba(var(--card-accent-rgb), 0.2);
+      background: rgba(var(--card-accent-rgb), 0.08);
+    }
+
+    .tool-card-dxf:hover .tool-card-arrow,
+    .tool-card-bar:hover .tool-card-arrow { color: var(--card-accent); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="wordmark">
+      <div class="wordmark-icon">
+        <svg viewBox="0 0 13 13" fill="none">
+          <rect x="1" y="1" width="4" height="4" rx="1" fill="#0d0d0d"/>
+          <rect x="8" y="1" width="4" height="4" rx="1" fill="#0d0d0d"/>
+          <rect x="1" y="8" width="4" height="4" rx="1" fill="#0d0d0d"/>
+          <rect x="8" y="8" width="4" height="4" rx="1" fill="#0d0d0d"/>
+        </svg>
+      </div>
+      0layer
+    </div>
+    <div class="header-divider"></div>
+    <span class="header-sub">tools by james wright</span>
+  </header>
+
+  <main>
+    <div class="page-label">0layer / tools</div>
+    <h1>Tools I use at work</h1>
+    <p class="page-desc">I built these because I needed them. They run in the browser so you can just open them and get on with it.</p>
+
+    <div class="tools-grid">
+
+      <a class="tool-card tool-card-dxf" href="/dxf-studio/">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 2h4v4H2zM8 2h4v4H8zM2 8h4v4H2zM8 8h4v4H8z" fill="currentColor" opacity="0.8"/>
+            <path d="M5 5h4v4H5z" fill="currentColor"/>
           </svg>
         </div>
-        0layer
-      </div>
-      <div class="header-divider"></div>
-      <span class="header-sub">tools by james wright</span>
-    </header>
+        <div class="tool-card-name">DXF Viewer &amp; Exploder</div>
+        <div class="tool-card-desc">Opens and displays DXF files. Has a button to explode everything down to bare geometry on layer 0 and export it as a clean DXF 2013 file.</div>
+        <div class="tool-card-footer">
+          <span class="tool-card-tag">CAD</span>
+          <span class="tool-card-arrow">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </span>
+        </div>
+      </a>
 
-    <main>
-      <div class="page-label">0layer / tools</div>
-      <h1>Tools I use at work</h1>
-      <p class="page-desc">
-        I built these because I needed them. They run in the browser so you can
-        just open them and get on with it.
-      </p>
+      <a class="tool-card tool-card-bar" href="/bar-optimiser/">
+        <div class="tool-card-icon">
+          <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="5" width="12" height="4" rx="1" fill="currentColor" opacity="0.7"/>
+            <rect x="1" y="2" width="5" height="2" rx="0.5" fill="currentColor"/>
+            <rect x="1" y="10" width="8" height="2" rx="0.5" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="tool-card-name">Bar Optimiser</div>
+        <div class="tool-card-desc">You give it a stock length and a list of cuts and it tells you how many bars you need and how to cut them to keep waste low.</div>
+        <div class="tool-card-footer">
+          <span class="tool-card-tag">Fabrication</span>
+          <span class="tool-card-arrow">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          </span>
+        </div>
+      </a>
 
-      <div class="tools-grid">
-        <a class="tool-card" href="/dxf-studio/">
-          <div class="tool-card-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <path d="M8 13h8M8 17h5" />
-            </svg>
-          </div>
-          <div class="tool-card-name">DXF Viewer &amp; Exploder</div>
-          <div class="tool-card-desc">
-            Opens and displays DXF files. Has a button to explode everything
-            down to bare geometry on layer 0 and export it as a clean DXF 2013
-            file.
-          </div>
-          <div class="tool-card-footer">
-            <span class="tool-card-tag">CAD</span>
-            <span class="tool-card-arrow">
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-              >
-                <path d="M3 8h10M9 4l4 4-4 4" />
-              </svg>
-            </span>
-          </div>
-        </a>
+    </div>
+  </main>
 
-        <a class="tool-card" href="/bar-optimiser/">
-          <div class="tool-card-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <rect x="2" y="9" width="20" height="6" rx="2" />
-              <path d="M6 9V7M10 9V5M14 9V7M18 9V5" />
-            </svg>
-          </div>
-          <div class="tool-card-name">Bar Optimiser</div>
-          <div class="tool-card-desc">
-            You give it a stock length and a list of cuts and it tells you how
-            many bars you need and how to cut them to keep waste low.
-          </div>
-          <div class="tool-card-footer">
-            <span class="tool-card-tag">Fabrication</span>
-            <span class="tool-card-arrow">
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-              >
-                <path d="M3 8h10M9 4l4 4-4 4" />
-              </svg>
-            </span>
-          </div>
-        </a>
-      </div>
-    </main>
+  <footer>© 0layer · James Wright 2026</footer>
 
-    <footer>© 0layer · James Wright</footer>
-  </body>
+</body>
 </html>
