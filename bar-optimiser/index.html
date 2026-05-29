@@ -592,6 +592,76 @@ textarea.field-input {
     }
     .kofi-link:hover { color: var(--accent); }
     .kofi-link svg { width: 12px; height: 12px; }
+
+/* ── Offcut rows ── */
+.offcut-row {
+  display: grid;
+  grid-template-columns: 1fr 64px 24px;
+  gap: 4px;
+  margin-bottom: 4px;
+  width: 100%;
+}
+.offcut-row-label {
+  min-width: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 6px 8px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.offcut-row-label:focus { border-color: rgba(125,211,252,0.5); }
+.offcut-row-label::placeholder { color: var(--text3); font-size: 11px; }
+.offcut-row-length {
+  min-width: 0; width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 6px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.offcut-row-length:focus { border-color: rgba(125,211,252,0.5); }
+.offcut-row-length::placeholder { color: var(--text3); }
+.offcut-row-del {
+  width: 24px; height: 24px; flex-shrink: 0;
+  background: transparent; border: 1px solid transparent;
+  border-radius: var(--radius-sm); color: var(--text3);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s; padding: 0;
+}
+.offcut-row-del:hover { border-color: rgba(248,113,113,0.3); color: var(--danger); background: rgba(248,113,113,0.08); }
+.offcut-row-del svg { width: 11px; height: 11px; }
+
+/* ── Section divider in results ── */
+.results-section-label {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text3); font-family: var(--font-mono);
+  margin-top: 4px;
+}
+.results-section-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: var(--border2);
+}
+.results-section-label.offcut-label { color: var(--accent); }
+.results-section-label.newbar-label { color: var(--text3); }
+
+/* ── Offcut bar card tint ── */
+.bar-card-offcut { border-color: rgba(125,211,252,0.2); }
+.bar-card-offcut .bar-index {
+  background: rgba(125,211,252,0.1);
+  border-color: rgba(125,211,252,0.3);
+  color: var(--accent);
+}
 </style>
 </head>
 <body>
@@ -612,6 +682,10 @@ textarea.field-input {
     <div class="titlebar-divider"></div>
     <span class="titlebar-meta">cut length optimisation</span>
     <div class="titlebar-actions">
+      <button class="btn btn-ghost" id="btn-print" disabled>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6V2h8v4"/><rect x="2" y="6" width="12" height="7" rx="1"/><path d="M4 10h8M4 13h5"/><circle cx="12" cy="9" r="0.8" fill="currentColor"/></svg>
+        Print
+      </button>
       <button class="btn btn-ghost" id="btn-clear">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
         Clear
@@ -694,16 +768,35 @@ textarea.field-input {
         </div>
       </div>
 
+      <div class="sidebar-section" style="flex:1;overflow-y:auto;">
+        <div class="sidebar-title" style="display:flex;align-items:center;justify-content:space-between;">
+          Offcuts
+          <span id="offcut-count-badge" class="layers-count" style="opacity:0">0</span>
+        </div>
+        <div id="offcut-list"></div>
+        <button class="cut-add-btn" id="btn-add-offcut">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 1v10M1 6h10"/></svg>
+          Add offcut
+        </button>
+        <div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:var(--font-mono);">
+          Label and length in mm
+        </div>
+      </div>
+
     </aside>
 
     <!-- Main panel -->
     <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
 
       <!-- Stats strip -->
-      <div class="stats-strip" id="stats-strip" style="display:none">
+      <div class="stats-strip" id="stats-strip" style="display:none;grid-template-columns:1fr 1fr 1fr 1fr;">
         <div class="stat-cell">
-          <div class="stat-label">Bars Required</div>
+          <div class="stat-label">New Bars Needed</div>
           <div class="stat-value accent" id="stat-bars">—</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-label">Offcuts Used</div>
+          <div class="stat-value" id="stat-offcuts-used">—</div>
         </div>
         <div class="stat-cell">
           <div class="stat-label">Total Cuts</div>
@@ -759,30 +852,50 @@ textarea.field-input {
 </div>
 
 <script>
-// ── Optimiser (from optimiser.js) ────────────────────────────────
-function optimiseBarCutting(stockLength, cutSizes, allowancePerCut) {
-  cutSizes = [...cutSizes].sort((a, b) => b - a);
-  const results = [];
-  while (cutSizes.length > 0) {
-    let currentStock = stockLength;
-    const currentCuts = [];
-    for (let i = 0; i < cutSizes.length; i++) {
-      const cutSize = cutSizes[i];
-      if (cutSize + allowancePerCut <= currentStock) {
-        currentCuts.push(cutSize);
-        currentStock -= cutSize + allowancePerCut;
-        cutSizes.splice(i, 1);
-        i--;
-      }
-    }
-    if (currentCuts.length > 0) {
-      const waste = stockLength - currentCuts.reduce((acc, cut) => acc + cut + allowancePerCut, 0);
-      results.push({ cuts: currentCuts, waste });
-    } else {
-      return { numberOfStockLengthsRequired: results.length, optimisedCuts: results };
+// ── Optimiser ────────────────────────────────────────────────────
+// Fills a single bar of given length with cuts from the remaining pool.
+// Returns { cuts, waste } or null if nothing fits.
+function fillBar(barLength, cutPool, allowance) {
+  let remaining = barLength;
+  const cuts = [];
+  for (let i = 0; i < cutPool.length; i++) {
+    if (cutPool[i] + allowance <= remaining) {
+      cuts.push(cutPool[i]);
+      remaining -= cutPool[i] + allowance;
+      cutPool.splice(i, 1);
+      i--;
     }
   }
-  return { numberOfStockLengthsRequired: results.length, optimisedCuts: results };
+  if (cuts.length === 0) return null;
+  const waste = barLength - cuts.reduce((s, c) => s + c + allowance, 0);
+  return { cuts, waste };
+}
+
+// Main optimiser: tries offcuts first, then new stock
+function optimiseWithOffcuts(stockLength, cutSizes, allowance, offcuts) {
+  // Work on copies
+  const pool = [...cutSizes].sort((a, b) => b - a);
+  const offcutResults = [];   // bars filled from offcuts
+  const newBarResults = [];   // bars filled from new stock
+
+  // Try to fill each offcut
+  const sortedOffcuts = [...offcuts].sort((a, b) => b.length - a.length);
+  for (const oc of sortedOffcuts) {
+    if (pool.length === 0) break;
+    const result = fillBar(oc.length, pool, allowance);
+    if (result) {
+      offcutResults.push({ ...result, label: oc.label, barLength: oc.length, isOffcut: true });
+    }
+  }
+
+  // Fill remaining with new stock
+  while (pool.length > 0) {
+    const result = fillBar(stockLength, pool, allowance);
+    if (!result) break;
+    newBarResults.push({ ...result, barLength: stockLength, isOffcut: false });
+  }
+
+  return { offcutResults, newBarResults, unplacedCuts: pool };
 }
 
 // ── Colour palette for cut segments ─────────────────────────────
@@ -796,12 +909,83 @@ const SEG_TEXT_COLOURS = [
 ];
 
 // ── Rendering ────────────────────────────────────────────────────
-function renderResults(result, stockLength, allowance) {
-  const content = document.getElementById('content');
-  const empty   = document.getElementById('empty-state');
-  const strip   = document.getElementById('stats-strip');
+function makeBarCard(bar, idx, trackId) {
+  const barLength  = bar.barLength;
+  const waste      = bar.waste;
+  const wasteFrac  = waste / barLength;
+  const wasteClass = wasteFrac < 0.05 ? 'waste-low' : wasteFrac < 0.15 ? 'waste-med' : 'waste-high';
+  const isOffcut   = bar.isOffcut;
 
-  if (!result || result.optimisedCuts.length === 0) {
+  const card = document.createElement('div');
+  card.className = 'bar-card' + (isOffcut ? ' bar-card-offcut' : '');
+
+  const labelHtml = isOffcut
+    ? `<div class="bar-index" title="${bar.label}">${(bar.label||'').substring(0,3)||'OC'}</div>`
+    : `<div class="bar-index">${idx}</div>`;
+
+  const nameHtml = isOffcut
+    ? `<div class="bar-cuts-summary">${bar.label} (${bar.barLength}mm) &nbsp;·&nbsp; ${bar.cuts.map(c => c + 'mm').join(', ')}</div>`
+    : `<div class="bar-cuts-summary">${bar.cuts.length} cut${bar.cuts.length !== 1 ? 's' : ''} &nbsp;·&nbsp; ${bar.cuts.map(c => c + 'mm').join(', ')}</div>`;
+
+  card.innerHTML = `
+    <div class="bar-header">
+      ${labelHtml}
+      ${nameHtml}
+      <div class="bar-waste-badge ${wasteClass}">waste ${Math.round(waste)}mm</div>
+    </div>
+    <div class="bar-visual">
+      <div class="bar-track" id="${trackId}"></div>
+      <div class="bar-legend">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="legend-dot" style="background:rgba(125,211,252,0.3)"></div>cut
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>kerf
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="legend-dot" style="background:rgba(248,113,113,0.15)"></div>waste ${(wasteFrac*100).toFixed(1)}%
+        </div>
+      </div>
+    </div>`;
+
+  // Build track
+  const track = card.querySelector(`#${trackId}`);
+  bar.cuts.forEach((cut, ci) => {
+    const seg = document.createElement('div');
+    seg.className = 'bar-segment seg-cut';
+    seg.style.width = (cut / barLength * 100) + '%';
+    seg.style.background = SEG_COLOURS[ci % SEG_COLOURS.length];
+    seg.style.color = SEG_TEXT_COLOURS[ci % SEG_TEXT_COLOURS.length];
+    seg.innerHTML = `<span>${cut}</span>`;
+    track.appendChild(seg);
+    if (allowanceGlobal > 0) {
+      const kerf = document.createElement('div');
+      kerf.className = 'bar-segment seg-kerf';
+      kerf.style.width = (allowanceGlobal / barLength * 100) + '%';
+      kerf.style.minWidth = '3px';
+      track.appendChild(kerf);
+    }
+  });
+  if (waste > 0) {
+    const wseg = document.createElement('div');
+    wseg.className = 'bar-segment seg-waste';
+    wseg.style.flex = '1'; wseg.style.minWidth = '4px';
+    wseg.innerHTML = `<span>${Math.round(waste)}mm</span>`;
+    track.appendChild(wseg);
+  }
+  return card;
+}
+
+let allowanceGlobal = 0;
+
+function renderResults(result, stockLength, allowance) {
+  allowanceGlobal = allowance;
+  const el     = document.getElementById('content');
+  const empty  = document.getElementById('empty-state');
+  const strip  = document.getElementById('stats-strip');
+  const allBars = [...result.offcutResults, ...result.newBarResults];
+
+  if (allBars.length === 0) {
     empty.style.display = 'flex';
     strip.style.display = 'none';
     return;
@@ -810,83 +994,41 @@ function renderResults(result, stockLength, allowance) {
   empty.style.display = 'none';
   strip.style.display = 'grid';
 
-  const totalCuts = result.optimisedCuts.reduce((s, b) => s + b.cuts.length, 0);
-  const avgWaste  = result.optimisedCuts.reduce((s, b) => s + b.waste, 0) / result.optimisedCuts.length;
-  const wastePct  = (avgWaste / stockLength * 100).toFixed(1);
+  const totalCuts  = allBars.reduce((s, b) => s + b.cuts.length, 0);
+  const avgWaste   = allBars.reduce((s, b) => s + b.waste, 0) / allBars.length;
 
-  document.getElementById('stat-bars').textContent  = result.numberOfStockLengthsRequired;
-  document.getElementById('stat-cuts').textContent  = totalCuts;
-  document.getElementById('stat-waste').textContent = `${Math.round(avgWaste)}mm`;
+  document.getElementById('stat-bars').textContent         = result.newBarResults.length;
+  document.getElementById('stat-offcuts-used').textContent = result.offcutResults.length;
+  document.getElementById('stat-cuts').textContent         = totalCuts;
+  document.getElementById('stat-waste').textContent        = `${Math.round(avgWaste)}mm`;
 
-  // Remove old bar cards
-  content.querySelectorAll('.bar-card').forEach(el => el.remove());
+  el.querySelectorAll('.bar-card, .results-section-label').forEach(e => e.remove());
 
-  result.optimisedCuts.forEach((bar, idx) => {
-    const usedLength = bar.cuts.reduce((s, c) => s + c + allowance, 0);
-    const waste      = bar.waste;
-    const wasteFrac  = waste / stockLength;
-    const wasteClass = wasteFrac < 0.05 ? 'waste-low' : wasteFrac < 0.15 ? 'waste-med' : 'waste-high';
-
-    const card = document.createElement('div');
-    card.className = 'bar-card';
-
-    // Header
-    card.innerHTML = `
-      <div class="bar-header">
-        <div class="bar-index">${idx + 1}</div>
-        <div class="bar-cuts-summary">${bar.cuts.length} cut${bar.cuts.length !== 1 ? 's' : ''} &nbsp;·&nbsp; ${bar.cuts.map(c => c + 'mm').join(', ')}</div>
-        <div class="bar-waste-badge ${wasteClass}">waste ${Math.round(waste)}mm</div>
-      </div>
-      <div class="bar-visual">
-        <div class="bar-track" id="track-${idx}"></div>
-        <div class="bar-legend">
-          <div style="display:flex;align-items:center;gap:4px">
-            <div class="legend-dot" style="background:rgba(125,211,252,0.3)"></div>cut
-          </div>
-          <div style="display:flex;align-items:center;gap:4px">
-            <div class="legend-dot" style="background:rgba(255,255,255,0.06)"></div>kerf
-          </div>
-          <div style="display:flex;align-items:center;gap:4px">
-            <div class="legend-dot" style="background:rgba(248,113,113,0.15)"></div>waste ${(wasteFrac*100).toFixed(1)}%
-          </div>
-        </div>
-      </div>`;
-
-    content.appendChild(card);
-
-    // Build visual track
-    const track = card.querySelector(`#track-${idx}`);
-    bar.cuts.forEach((cut, ci) => {
-      // Cut segment
-      const cutFrac = cut / stockLength;
-      const seg = document.createElement('div');
-      seg.className = 'bar-segment seg-cut';
-      seg.style.width = (cutFrac * 100) + '%';
-      seg.style.background = SEG_COLOURS[ci % SEG_COLOURS.length];
-      seg.style.color = SEG_TEXT_COLOURS[ci % SEG_TEXT_COLOURS.length];
-      seg.innerHTML = `<span>${cut}</span>`;
-      track.appendChild(seg);
-
-      // Kerf segment
-      if (allowance > 0) {
-        const kerf = document.createElement('div');
-        kerf.className = 'bar-segment seg-kerf';
-        kerf.style.width = (allowance / stockLength * 100) + '%';
-        kerf.style.minWidth = '3px';
-        track.appendChild(kerf);
-      }
+  // Offcuts section
+  if (result.offcutResults.length > 0) {
+    const lbl = document.createElement('div');
+    lbl.className = 'results-section-label offcut-label';
+    lbl.textContent = `Offcuts used (${result.offcutResults.length})`;
+    el.appendChild(lbl);
+    result.offcutResults.forEach((bar, i) => {
+      el.appendChild(makeBarCard(bar, i+1, `track-oc-${i}`));
     });
+  }
 
-    // Waste segment
-    if (waste > 0) {
-      const wseg = document.createElement('div');
-      wseg.className = 'bar-segment seg-waste';
-      wseg.style.flex = '1';
-      wseg.style.minWidth = '4px';
-      wseg.innerHTML = `<span>${Math.round(waste)}mm</span>`;
-      track.appendChild(wseg);
-    }
-  });
+  // New stock section
+  if (result.newBarResults.length > 0) {
+    const lbl = document.createElement('div');
+    lbl.className = 'results-section-label newbar-label';
+    lbl.textContent = `New stock required (${result.newBarResults.length})`;
+    el.appendChild(lbl);
+    result.newBarResults.forEach((bar, i) => {
+      el.appendChild(makeBarCard(bar, i+1, `track-nb-${i}`));
+    });
+  }
+
+  if (result.unplacedCuts && result.unplacedCuts.length > 0) {
+    toast(`Warning: ${result.unplacedCuts.length} cut(s) couldn't be placed — check lengths vs stock`);
+  }
 }
 
 // ── Cut list row management ──────────────────────────────────────
@@ -961,11 +1103,67 @@ addCutRow(); addCutRow(); addCutRow();
 
 document.getElementById('btn-add-cut').addEventListener('click', () => addCutRow());
 
+// ── Offcut row management ────────────────────────────────────────
+function addOffcutRow(label = '', length = '') {
+  const list = document.getElementById('offcut-list');
+  const row  = document.createElement('div');
+  row.className = 'offcut-row';
+  row.innerHTML = `
+    <input class="offcut-row-label" type="text" placeholder="Label e.g. Offcut A" value="${label}" />
+    <input class="offcut-row-length" type="number" min="1" placeholder="mm" value="${length}" tabindex="0" />
+    <button class="offcut-row-del" tabindex="-1" title="Remove">
+      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 2l8 8M10 2l-8 8"/></svg>
+    </button>`;
+
+  row.querySelector('.offcut-row-del').addEventListener('click', () => {
+    row.remove(); updateOffcutCountBadge();
+  });
+  row.querySelector('.offcut-row-length').addEventListener('input', updateOffcutCountBadge);
+
+  // Tab from label → length, Tab from length → next label or new row
+  row.querySelector('.offcut-row-label').addEventListener('keydown', e => {
+    if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); row.querySelector('.offcut-row-length').focus(); }
+  });
+  row.querySelector('.offcut-row-length').addEventListener('keydown', e => {
+    if (e.key === 'Tab' && !e.shiftKey || e.key === 'Enter') {
+      e.preventDefault();
+      const allLengths = Array.from(document.querySelectorAll('.offcut-row-length'));
+      const idx = allLengths.indexOf(e.target);
+      if (idx < allLengths.length - 1) {
+        allLengths[idx + 1].closest('.offcut-row').querySelector('.offcut-row-label').focus();
+      } else { addOffcutRow(); }
+    }
+  });
+
+  list.appendChild(row);
+  row.querySelector('.offcut-row-label').focus();
+  updateOffcutCountBadge();
+}
+
+function updateOffcutCountBadge() {
+  const vals = getOffcuts();
+  const badge = document.getElementById('offcut-count-badge');
+  badge.textContent = vals.length;
+  badge.style.opacity = vals.length > 0 ? '1' : '0';
+}
+
+function getOffcuts() {
+  return Array.from(document.getElementById('offcut-list').querySelectorAll('.offcut-row'))
+    .map(row => ({
+      label:  row.querySelector('.offcut-row-label').value.trim() || 'Offcut',
+      length: parseFloat(row.querySelector('.offcut-row-length').value)
+    }))
+    .filter(o => o.length > 0);
+}
+
+document.getElementById('btn-add-offcut').addEventListener('click', () => addOffcutRow());
+
 // ── Event handlers ───────────────────────────────────────────────
 function calculate() {
   const barLength    = parseFloat(document.getElementById('barLength').value);
   const cutAllowance = parseFloat(document.getElementById('cutAllowance').value) || 0;
   const cutLengths   = getCutLengths();
+  const offcuts      = getOffcuts();
 
   if (!barLength || barLength <= 0)  { toast('Enter a valid bar length'); return; }
   if (cutLengths.length === 0)       { toast('Add at least one cut length'); return; }
@@ -973,18 +1171,25 @@ function calculate() {
   const oversized = cutLengths.filter(c => c > barLength);
   if (oversized.length > 0) { toast(`Cut ${oversized[0]}mm exceeds bar length ${barLength}mm`); return; }
 
-  const result = optimiseBarCutting(barLength, cutLengths, cutAllowance);
+  const oversizedOffcuts = offcuts.filter(o => o.length > barLength);
+  // Allow offcuts longer than stock — they're valid stock lengths themselves
+
+  const result = optimiseWithOffcuts(barLength, cutLengths, cutAllowance, offcuts);
   renderResults(result, barLength, cutAllowance);
+  document.getElementById('btn-print').disabled = false;
 }
 
 function clearAll() {
   document.getElementById('barLength').value    = '';
   document.getElementById('cutAllowance').value = '';
-  document.getElementById('cut-list').innerHTML = '';
+  document.getElementById('cut-list').innerHTML    = '';
+  document.getElementById('offcut-list').innerHTML = '';
   addCutRow(); addCutRow(); addCutRow();
-  document.getElementById('content').querySelectorAll('.bar-card').forEach(el => el.remove());
+  updateOffcutCountBadge();
+  document.getElementById('content').querySelectorAll('.bar-card, .results-section-label').forEach(el => el.remove());
   document.getElementById('empty-state').style.display = 'flex';
   document.getElementById('stats-strip').style.display  = 'none';
+  document.getElementById('btn-print').disabled = true;
 }
 
 document.getElementById('btn-calculate').addEventListener('click', calculate);
@@ -1000,6 +1205,117 @@ function toast(msg, success = false) {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 4000);
 }
+
+
+// ── Print ─────────────────────────────────────────────────────────
+document.getElementById('btn-print').addEventListener('click', function() {
+  const statBars  = document.getElementById('stat-bars').textContent;
+  const statOC    = document.getElementById('stat-offcuts-used').textContent;
+  const statCuts  = document.getElementById('stat-cuts').textContent;
+  const statWaste = document.getElementById('stat-waste').textContent;
+  const barLength = document.getElementById('barLength').value;
+  const kerf      = document.getElementById('cutAllowance').value || '0';
+
+  const allNodes = Array.from(document.getElementById('content').children)
+    .filter(n => n.classList.contains('bar-card') || n.classList.contains('results-section-label'));
+
+  let sections = '';
+  allNodes.forEach(node => {
+    if (node.classList.contains('results-section-label')) {
+      sections += `<div class="section-lbl">${node.textContent}</div>`;
+      return;
+    }
+    const header = node.querySelector('.bar-header');
+    const idxEl  = header.querySelector('.bar-index');
+    const sumEl  = header.querySelector('.bar-cuts-summary');
+    const wstEl  = header.querySelector('.bar-waste-badge');
+    const track  = node.querySelector('.bar-track');
+    const isOC   = node.classList.contains('bar-card-offcut');
+
+    // Build SVG from live DOM track segments
+    const W = 520, H = 26;
+    const totalPx = track.scrollWidth || track.offsetWidth || 1;
+    let svgX = 0, rects = '', lbls = '', patIdx = 0;
+    Array.from(track.children).forEach(seg => {
+      const frac = seg.offsetWidth / totalPx;
+      const sw = Math.max(0.5, frac * W);
+      if (seg.classList.contains('seg-cut')) {
+        const p = patIdx++ % 2 === 0 ? 'url(#pa)' : 'url(#pb)';
+        rects += `<rect x="${svgX.toFixed(1)}" y="0" width="${sw.toFixed(1)}" height="${H}" fill="${p}" stroke="#888" stroke-width="0.5"/>`;
+        const lbl = seg.querySelector('span')?.textContent || '';
+        if (sw > 22 && lbl) lbls += `<text x="${(svgX+sw/2).toFixed(1)}" y="${(H/2+3.5).toFixed(1)}" text-anchor="middle" font-size="8.5" font-family="Arial" fill="#000">${lbl}</text>`;
+      } else if (seg.classList.contains('seg-kerf')) {
+        rects += `<rect x="${svgX.toFixed(1)}" y="2" width="${Math.max(1,sw).toFixed(1)}" height="${H-4}" fill="#222"/>`;
+      } else if (seg.classList.contains('seg-waste')) {
+        rects += `<rect x="${svgX.toFixed(1)}" y="0" width="${sw.toFixed(1)}" height="${H}" fill="#fff" stroke="#888" stroke-width="0.5" stroke-dasharray="3,2"/>`;
+        const lbl = seg.querySelector('span')?.textContent || '';
+        if (sw > 18 && lbl) lbls += `<text x="${(svgX+sw/2).toFixed(1)}" y="${(H/2+3.5).toFixed(1)}" text-anchor="middle" font-size="8.5" font-family="Arial" fill="#666">${lbl}</text>`;
+      }
+      svgX += sw;
+    });
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+      <defs>
+        <pattern id="pa" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#999" stroke-width="1.4"/></pattern>
+        <pattern id="pb" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#bbb" stroke-width="1.4"/></pattern>
+      </defs>
+      <rect x="0.5" y="0.5" width="${W-1}" height="${H-1}" fill="#fff" stroke="#555" stroke-width="1" rx="2"/>
+      ${rects}${lbls}
+    </svg>`;
+
+    sections += `<div class="bar-row${isOC?' oc':''}">
+      <div class="bar-hdr">
+        <b>${idxEl.textContent.trim()}</b>
+        <span class="bsum">${sumEl.textContent.trim()}</span>
+        <span class="bwst">${wstEl.textContent.trim()}</span>
+      </div>
+      ${svg}
+    </div>`;
+  });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cut Report</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;padding:20px 24px;max-width:800px;margin:0 auto}
+    h1{font-size:14px;font-weight:700;margin-bottom:2px}
+    .meta{font-size:10px;color:#555;margin-bottom:12px}
+    .stats{display:flex;gap:20px;padding:7px 0;border-top:2px solid #000;border-bottom:1px solid #bbb;margin-bottom:16px}
+    .si{display:flex;flex-direction:column}
+    .sl{font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:#666}
+    .sv{font-size:14px;font-weight:700}
+    .section-lbl{font-size:8.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid #000;padding:6px 0 2px;margin:6px 0 4px}
+    .bar-row{margin-bottom:8px;page-break-inside:avoid}
+    .bar-hdr{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+    .bar-hdr b{min-width:28px;font-size:11px}
+    .bsum{flex:1;font-size:9.5px;color:#333}
+    .bwst{font-size:9.5px;color:#555;white-space:nowrap}
+    .legend{display:flex;gap:14px;margin-top:12px;font-size:9px;color:#555;padding-top:8px;border-top:1px solid #ddd}
+    .li{display:flex;align-items:center;gap:4px}
+    .ls{width:14px;height:9px;border:1px solid #888;flex-shrink:0}
+    .footer{margin-top:12px;font-size:8px;color:#aaa;padding-top:6px;border-top:1px solid #eee}
+    @media print{body{padding:8px}@page{margin:10mm;size:A4}}
+  </style></head><body>
+  <h1>Bar Optimiser — Cut Report</h1>
+  <div class="meta">Stock: ${barLength}mm · Kerf: ${kerf}mm · ${new Date().toLocaleDateString()}</div>
+  <div class="stats">
+    <div class="si"><span class="sl">New bars</span><span class="sv">${statBars}</span></div>
+    <div class="si"><span class="sl">Offcuts used</span><span class="sv">${statOC}</span></div>
+    <div class="si"><span class="sl">Total cuts</span><span class="sv">${statCuts}</span></div>
+    <div class="si"><span class="sl">Avg waste</span><span class="sv">${statWaste}</span></div>
+  </div>
+  ${sections}
+  <div class="legend">
+    <div class="li"><div class="ls" style="background:repeating-linear-gradient(45deg,#999,#999 1px,#fff 1px,#fff 4px)"></div>Cut</div>
+    <div class="li"><div class="ls" style="background:#222;border-color:#222"></div>Kerf</div>
+    <div class="li"><div class="ls" style="border-style:dashed"></div>Waste</div>
+  </div>
+  <div class="footer">0layer · Bar Optimiser · © James Wright 2026</div>
+  </body></html>`;
+
+  const w = window.open('', '_blank', 'width=860,height=700');
+  w.document.write(html);
+  w.document.close();
+});
 
 // ── 0layer nav dropdown ──────────────────────────────────────────
 (function() {
