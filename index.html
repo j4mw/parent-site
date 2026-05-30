@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>0layer</title>
+  <title>0layer — Free Browser Tools for CAD and Fabrication</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
@@ -250,11 +250,47 @@
 
     .tool-card-dxf:hover .tool-card-arrow,
     .tool-card-bar:hover .tool-card-arrow { color: var(--card-accent); }
-  </style>
+  
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  background: var(--accent, #f97316);
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  z-index: 9999;
+  transition: top 0.1s;
+}
+.skip-link:focus { top: 16px; }
+</style>
+
+  <meta name="description" content="Free browser-based tools for CAD and fabrication. DXF Viewer & Exploder, Bar Cut Optimiser. No install, no login.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://0layer.dev/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="0layer — Free Browser Tools for CAD and Fabrication">
+  <meta property="og:description" content="Free browser-based tools for CAD and fabrication. DXF Viewer & Exploder, Bar Cut Optimiser. No install, no login.">
+  <meta property="og:url" content="https://0layer.dev/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="0layer — Free Browser Tools for CAD and Fabrication">
+  <meta name="twitter:description" content="Free browser-based tools for CAD and fabrication. DXF Viewer & Exploder, Bar Cut Optimiser. No install, no login.">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VLKDXVXNWY"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VLKDXVXNWY');
+</script>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <header>
+  <header role="banner">
     <div class="wordmark">
       <div class="wordmark-icon">
         <svg viewBox="0 0 13 13" fill="none">
@@ -267,17 +303,17 @@
       0layer
     </div>
     <div class="header-divider"></div>
-    <span class="header-sub">tools by james wright</span>
+    <span class="header-sub">browser-based tools</span>
   </header>
 
-  <main>
+  <main role="main" id="main-content">
     <div class="page-label">0layer / tools</div>
     <h1>Tools I use at work</h1>
     <p class="page-desc">I built these because I needed them. They run in the browser so you can just open them and get on with it.</p>
 
     <div class="tools-grid">
 
-      <a class="tool-card tool-card-dxf" href="/dxf-studio/">
+      <a class="tool-card tool-card-dxf" href="/dxf-studio/" aria-label="Open DXF Studio tool">
         <div class="tool-card-icon">
           <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M2 2h4v4H2zM8 2h4v4H8zM2 8h4v4H2zM8 8h4v4H8z" fill="currentColor" opacity="0.8"/>
@@ -294,7 +330,7 @@
         </div>
       </a>
 
-      <a class="tool-card tool-card-bar" href="/bar-optimiser/">
+      <a class="tool-card tool-card-bar" href="/bar-optimiser/" aria-label="Open Bar Optimiser tool">
         <div class="tool-card-icon">
           <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="1" y="5" width="12" height="4" rx="1" fill="currentColor" opacity="0.7"/>
@@ -315,7 +351,7 @@
     </div>
   </main>
 
-  <footer>© 0layer · James Wright 2026 &nbsp;·&nbsp; <a class="kofi-link" href="https://ko-fi.com/0layer" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682-.145-1.682-.145V5.008h1.77s1.971.204 1.971 2.486c0 2.283-1.371 5.023-2.059 5.443z"/></svg>Support on Ko-fi</a></footer>
+  <footer role="contentinfo">© 0layer · 2026 &nbsp;·&nbsp; <a class="kofi-link" href="https://ko-fi.com/0layer" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682-.145-1.682-.145V5.008h1.77s1.971.204 1.971 2.486c0 2.283-1.371 5.023-2.059 5.443z"/></svg>Support on Ko-fi</a></footer>
 
 </body>
 </html>
