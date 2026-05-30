@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bar Optimiser — Free Cut Length Optimiser | 0layer</title>
+<title>Bar Optimiser · 0layer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -695,68 +695,10 @@ textarea.field-input {
   border-color: rgba(125,211,252,0.3);
   color: var(--accent);
 }
-
-.skip-link {
-  position: absolute;
-  top: -100px;
-  left: 16px;
-  background: var(--accent, #f97316);
-  color: #000;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  z-index: 9999;
-  transition: top 0.1s;
-}
-.skip-link:focus { top: 16px; }
-
-/* ── Mobile sticky action bar ── */
-.mobile-action-bar {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  padding: 12px 16px;
-  background: var(--surface);
-  border-top: 1px solid var(--border2);
-  gap: 8px;
-  z-index: 20;
-}
-@media (max-width: 600px) {
-  .mobile-action-bar { display: flex; }
-  .mobile-action-bar .btn { flex: 1; justify-content: center; }
-  /* hide the titlebar action buttons on mobile so they don't duplicate */
-  .titlebar .btn-ghost#btn-print,
-  .titlebar .btn-ghost#btn-clear,
-  .titlebar .btn-primary#btn-calculate { display: none; }
-  /* pad content so it doesn't hide behind sticky bar */
-  .workspace { padding-bottom: 64px; }
-}
 </style>
-
-  <meta name="description" content="Optimise bar stock cutting to minimise waste. Enter stock length, kerf and cut list. Get a visual cut plan and print report. Free, runs in the browser.">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://0layer.dev/bar-optimiser/">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Bar Optimiser — Free Cut Length Optimiser | 0layer">
-  <meta property="og:description" content="Optimise bar stock cutting to minimise waste. Enter stock length, kerf and cut list. Get a visual cut plan and print report. Free, runs in the browser.">
-  <meta property="og:url" content="https://0layer.dev/bar-optimiser/">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Bar Optimiser — Free Cut Length Optimiser | 0layer">
-  <meta name="twitter:description" content="Optimise bar stock cutting to minimise waste. Enter stock length, kerf and cut list. Get a visual cut plan and print report. Free, runs in the browser.">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VLKDXVXNWY"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-VLKDXVXNWY');
-</script>
 </head>
 <body>
 <div class="app">
-<a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- Titlebar -->
   <header class="titlebar">
@@ -829,15 +771,9 @@ textarea.field-input {
   <div class="workspace">
 
     <!-- Sidebar -->
-    <aside class="sidebar" role="complementary" aria-label="Cut list inputs">
+    <aside class="sidebar">
       <div class="sidebar-section">
-        <div class="sidebar-title">Job</div>
-        <div class="field">
-          <label class="field-label" for="jobTitle">Job Title</label>
-          <input class="field-input" type="text" id="jobTitle" placeholder="e.g. Frame A — Workshop 3" aria-label="Job title" />
-          <span class="field-hint">appears on print report</span>
-        </div>
-        <div class="sidebar-title" style="margin-top:12px">Stock</div>
+        <div class="sidebar-title">Stock</div>
         <div class="field">
           <label class="field-label" for="barLength">Bar Length</label>
           <input class="field-input" type="number" id="barLength" placeholder="e.g. 6000" />
@@ -912,7 +848,7 @@ textarea.field-input {
       </div>
 
       <!-- Content area -->
-      <div class="content" id="main-content" role="main">
+      <div class="content" id="content">
         <div class="empty-state" id="empty-state">
           <div class="empty-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -926,22 +862,6 @@ textarea.field-input {
       </div>
 
     </div>
-  </div>
-
-  <!-- Mobile sticky action bar -->
-  <div class="mobile-action-bar" role="toolbar" aria-label="Calculate and print actions">
-    <button class="btn btn-ghost" id="btn-clear-mobile">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3l10 10M13 3L3 13"/></svg>
-      Clear
-    </button>
-    <button class="btn btn-ghost" id="btn-print-mobile" disabled>
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6V2h8v4"/><rect x="2" y="6" width="12" height="7" rx="1"/><path d="M4 10h8"/></svg>
-      Print
-    </button>
-    <button class="btn btn-primary" id="btn-calculate-mobile">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      Calculate
-    </button>
   </div>
 
   <div class="ol-about">
@@ -961,7 +881,7 @@ textarea.field-input {
     </div>
   </div>
   <div class="ol-footer">
-    <span class="ol-footer-copy">© 0layer · 2026</span>
+    <span class="ol-footer-copy">© 0layer · James Wright 2026</span>
     <a class="kofi-link" href="https://ko-fi.com/0layer" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682-.145-1.682-.145V5.008h1.77s1.971.204 1.971 2.486c0 2.283-1.371 5.023-2.059 5.443z"/></svg>
       Support on Ko-fi
@@ -1131,17 +1051,6 @@ function renderResults(result, stockLength, allowance) {
 
   empty.style.display = 'none';
   strip.style.display = 'grid';
-
-  // Show job title banner if a title is set
-  const jobTitle = (document.getElementById('jobTitle').value || '').trim();
-  const banner = document.getElementById('job-banner');
-  const bannerTitle = document.getElementById('job-banner-title');
-  if (jobTitle) {
-    bannerTitle.textContent = jobTitle;
-    banner.style.display = 'flex';
-  } else {
-    banner.style.display = 'none';
-  }
 
   const totalCuts  = allBars.reduce((s, b) => s + b.cuts.length, 0);
   const avgWaste   = allBars.reduce((s, b) => s + b.waste, 0) / allBars.length;
@@ -1362,7 +1271,6 @@ function clearAll() {
   document.getElementById('content').querySelectorAll('.bar-card, .results-section-label').forEach(el => el.remove());
   document.getElementById('empty-state').style.display = 'flex';
   document.getElementById('stats-strip').style.display  = 'none';
-  document.getElementById('job-banner').style.display   = 'none';
   document.getElementById('btn-print').disabled = true;
 }
 
@@ -1383,7 +1291,6 @@ function toast(msg, success = false) {
 
 // ── Print ─────────────────────────────────────────────────────────
 document.getElementById('btn-print').addEventListener('click', function() {
-  const jobTitle  = (document.getElementById('jobTitle').value || '').trim();
   const statBars  = document.getElementById('stat-bars').textContent;
   const statOC    = document.getElementById('stat-offcuts-used').textContent;
   const statCuts  = document.getElementById('stat-cuts').textContent;
@@ -1459,7 +1366,6 @@ document.getElementById('btn-print').addEventListener('click', function() {
     + '*{margin:0;padding:0;box-sizing:border-box}'
     + 'body{font-family:Arial,sans-serif;font-size:11px;color:#000;background:#fff;padding:20px 24px;max-width:800px;margin:0 auto}'
     + 'h1{font-size:14px;font-weight:700;margin-bottom:2px}'
-    + '.job-title{font-size:20px;font-weight:600;letter-spacing:-0.02em;color:#000;margin-bottom:4px;margin-top:4px}'
     + '.meta{font-size:10px;color:#555;margin-bottom:12px}'
     + '.stats{display:flex;gap:20px;padding:7px 0;border-top:2px solid #000;border-bottom:1px solid #bbb;margin-bottom:16px;flex-wrap:wrap}'
     + '.si{display:flex;flex-direction:column;min-width:80px}'
@@ -1487,12 +1393,11 @@ document.getElementById('btn-print').addEventListener('click', function() {
     + '}'
     + '</style></head><body>'
     + '<div class="print-hdr">'
-    +   '<span>Bar Optimiser' + (jobTitle ? ' &mdash; ' + jobTitle : ' — Cut Report') + ' &nbsp;&middot;&nbsp; Stock: ' + barLength + 'mm &nbsp;&middot;&nbsp; Kerf: ' + kerf + 'mm</span>'
+    +   '<span>Bar Optimiser — Cut Report &nbsp;&middot;&nbsp; Stock: ' + barLength + 'mm &nbsp;&middot;&nbsp; Kerf: ' + kerf + 'mm</span>'
     +   '<span>' + date + '</span>'
     + '</div>'
     + '<div class="content">'
     + '<h1>Bar Optimiser &mdash; Cut Report</h1>'
-    + (jobTitle ? '<div class="job-title">' + jobTitle + '</div>' : '')
     + '<div class="meta">Stock: ' + barLength + 'mm &nbsp;&middot;&nbsp; Kerf: ' + kerf + 'mm &nbsp;&middot;&nbsp; ' + date + '</div>'
     + '<div class="stats">'
     +   '<div class="si"><span class="sl">New bars needed</span><span class="sv">' + statBars + '</span></div>'
@@ -1508,7 +1413,7 @@ document.getElementById('btn-print').addEventListener('click', function() {
     + '</div>'
     + '</div>'
     + '<div class="footer">'
-    +   '<span>0layer &middot; Bar Optimiser &middot; &copy; 2026</span>'
+    +   '<span>0layer &middot; Bar Optimiser &middot; &copy; James Wright 2026</span>'
     +   '<span>Use Ctrl+P to print</span>'
     + '</div>'
     + '</body></html>';
@@ -1532,26 +1437,6 @@ document.getElementById('btn-print').addEventListener('click', function() {
     btn.classList.remove('open');
     dd.classList.remove('open');
   });
-})();
-
-
-// ── Sync mobile action bar buttons ──────────────────────────────
-(function() {
-  const calcMob  = document.getElementById('btn-calculate-mobile');
-  const clearMob = document.getElementById('btn-clear-mobile');
-  const printMob = document.getElementById('btn-print-mobile');
-  if (calcMob)  calcMob.addEventListener('click',  () => calculate());
-  if (clearMob) clearMob.addEventListener('click',  () => clearAll());
-  if (printMob) printMob.addEventListener('click',  () => document.getElementById('btn-print').click());
-
-  // Keep print button enabled state in sync
-  const printDesk = document.getElementById('btn-print');
-  if (printDesk && printMob) {
-    const obs = new MutationObserver(() => {
-      printMob.disabled = printDesk.disabled;
-    });
-    obs.observe(printDesk, { attributes: true, attributeFilter: ['disabled'] });
-  }
 })();
 
 </script>
