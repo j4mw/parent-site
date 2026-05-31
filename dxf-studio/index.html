@@ -8,27 +8,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DXF Studio · 0layer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ── Dark only ── */
 :root {
-  --bg:         #0d0d0d;
-  --surface:    #141414;
-  --surface2:   #1a1a1a;
-  --border:     rgba(255,255,255,0.06);
-  --border2:    rgba(255,255,255,0.10);
-  --accent:     #fbbf24;
-  --accent2:    #f59e0b;
-  --text:       #f0f0f0;
-  --text2:      #a0a0a0;
-  --text3:      #525252;
+  --bg:         #0c0c0d;
+  --surface:    #111113;
+  --surface2:   #18181b;
+  --border:     #27272a;
+  --border2:    #3f3f46;
+  --accent:     #b45309;
+  --accent2:    #92400e;
+  --accent-hi:  #d97706;
+  --text:       #fafafa;
+  --text2:      #a1a1aa;
+  --text3:      #52525b;
   --danger:     #f87171;
-  --grid:       rgba(255,255,255,0.025);
   --radius:     6px;
   --radius-sm:  4px;
-  --font-mono:  'Geist Mono', monospace;
-  --font-sans:  'Geist', sans-serif;
+  --font-mono:  'DM Mono', monospace;
+  --font-sans:  'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
 html, body {
@@ -45,12 +46,13 @@ html, body {
 .app { display: flex; flex-direction: column; height: 100vh; }
 
 /* ── Titlebar ── */
+/* ── Titlebar — matches home page nav ── */
 .titlebar {
-  height: 52px;
+  height: 60px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  gap: 12px;
+  padding: 0 40px;
+  gap: 8px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   flex-shrink: 0;
@@ -61,28 +63,29 @@ html, body {
 .wordmark {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   letter-spacing: -0.02em;
   color: var(--text);
   flex-shrink: 0;
 }
 
 .wordmark-icon {
-  width: 26px; height: 26px;
+  width: 28px; height: 28px;
   background: var(--accent);
-  border-radius: 5px;
+  border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
 .wordmark-icon svg { width: 14px; height: 14px; }
 
 .titlebar-divider {
-  width: 1px; height: 20px;
+  width: 1px; height: 18px;
   background: var(--border2);
   flex-shrink: 0;
+  margin: 0 4px;
 }
 
 .file-badge {
@@ -97,7 +100,7 @@ html, body {
   font-size: 11px;
   color: var(--text2);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, background 0.2s, border-color 0.2s;
 }
 .file-badge.visible { opacity: 1; }
 .file-badge-dot {
@@ -119,12 +122,12 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 12px;
-  height: 32px;
+  padding: 0 14px;
+  height: 34px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  border-radius: var(--radius-sm);
+  border-radius: 7px;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -146,12 +149,12 @@ html, body {
 .btn-primary {
   background: var(--accent);
   border: 1px solid var(--accent);
-  color: #0d0d0d;
+  color: #fff;
   font-weight: 600;
 }
 .btn-primary:hover {
-  background: var(--accent2);
-  border-color: var(--accent2);
+  background: var(--accent-hi);
+  border-color: var(--accent-hi);
 }
 
 .btn-outline {
@@ -160,8 +163,8 @@ html, body {
   color: var(--text2);
 }
 .btn-outline:hover {
-  background: rgba(251,191,36,0.08);
-  border-color: rgba(251,191,36,0.4);
+  background: rgba(180,83,9,0.08);
+  border-color: rgba(180,83,9,0.35);
   color: var(--accent);
 }
 
@@ -185,20 +188,21 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .sidebar-header {
-  padding: 14px 16px 10px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .sidebar-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: var(--text2);
   margin-bottom: 12px;
 }
 
@@ -215,13 +219,13 @@ html, body {
   padding: 8px 10px;
 }
 .stat-label {
-  font-size: 10px;
-  color: var(--text3);
-  margin-bottom: 2px;
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 3px;
   font-family: var(--font-mono);
 }
 .stat-value {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text);
   font-family: var(--font-mono);
@@ -229,25 +233,25 @@ html, body {
 }
 
 .layers-header {
-  padding: 10px 16px 8px;
+  padding: 12px 16px 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
 }
 .layers-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--text3);
+  color: var(--text2);
 }
 .layers-count {
   font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text3);
+  font-size: 11px;
+  color: var(--text2);
   background: var(--surface2);
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 10px;
   border: 1px solid var(--border);
 }
@@ -262,7 +266,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 7px 8px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background 0.1s;
@@ -278,8 +282,8 @@ html, body {
 }
 .layer-name {
   flex: 1;
-  font-size: 12px;
-  color: var(--text2);
+  font-size: 12.5px;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -287,12 +291,12 @@ html, body {
 }
 .layer-item:hover .layer-name { color: var(--text); }
 .layer-count-badge {
-  font-size: 10px;
+  font-size: 11px;
   font-family: var(--font-mono);
-  color: var(--text3);
+  color: var(--text2);
   background: var(--surface2);
   border: 1px solid var(--border);
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
   flex-shrink: 0;
 }
@@ -304,10 +308,10 @@ html, body {
   overflow: hidden;
   background: #080b0f;
   background-image:
-    linear-gradient(rgba(251,191,36,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(251,191,36,0.05) 1px, transparent 1px),
-    linear-gradient(rgba(251,191,36,0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(251,191,36,0.018) 1px, transparent 1px);
+    linear-gradient(rgba(180,83,9,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,83,9,0.05) 1px, transparent 1px),
+    linear-gradient(rgba(180,83,9,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180,83,9,0.018) 1px, transparent 1px);
   background-size: 160px 160px, 160px 160px, 32px 32px, 32px 32px;
 }
 
@@ -333,7 +337,7 @@ html, body {
 .drop-overlay.active { pointer-events: all; }
 .drop-overlay.hidden { display: none; }
 .drop-overlay.dragover {
-  background: rgba(251,191,36,0.04);
+  background: rgba(180,83,9,0.04);
   outline: 1.5px dashed var(--accent);
   outline-offset: -12px;
 }
@@ -351,8 +355,8 @@ html, body {
   transition: all 0.2s;
 }
 .drop-zone-inner:hover {
-  border-color: rgba(251,191,36,0.3);
-  background: rgba(251,191,36,0.03);
+  border-color: rgba(180,83,9,0.35);
+  background: rgba(180,83,9,0.03);
 }
 
 .drop-icon-wrap {
@@ -443,7 +447,7 @@ html, body {
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background: #1a0a0a;
+  background: var(--surface);
   border: 1px solid rgba(248,113,113,0.3);
   color: var(--danger);
   padding: 8px 16px;
@@ -454,9 +458,9 @@ html, body {
   animation: toastIn 0.2s ease;
 }
 .toast-success {
-  background: rgba(251,191,36,0.08);
-  border-color: rgba(251,191,36,0.2);
-  color: var(--accent);
+  background: rgba(180,83,9,0.08);
+  border-color: rgba(180,83,9,0.25);
+  color: var(--accent-hi);
 }
 
 @keyframes toastIn {
@@ -475,7 +479,7 @@ html, body {
 .ol-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-left: auto;
   position: relative;
 }
@@ -496,7 +500,7 @@ html, body {
 .ol-wordmark:hover { color: var(--text); }
 .ol-wordmark-icon {
   width: 22px; height: 22px;
-  background: var(--accent);
+  background: var(--text);
   border-radius: 4px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -518,7 +522,7 @@ html, body {
   transition: all 0.15s;
   position: relative;
 }
-.ol-tools-btn:hover { border-color: rgba(251,191,36,0.3); color: var(--text); }
+.ol-tools-btn:hover { border-color: rgba(180,83,9,0.35); color: var(--text); }
 .ol-tools-btn svg { width: 11px; height: 11px; transition: transform 0.15s; }
 .ol-tools-btn.open svg { transform: rotate(180deg); }
 
@@ -532,8 +536,9 @@ html, body {
   min-width: 180px;
   padding: 4px;
   z-index: 100;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   display: none;
+  transition: background 0.2s;
 }
 .ol-dropdown.open { display: block; }
 
@@ -585,6 +590,7 @@ html, body {
   align-items: flex-start;
   gap: 16px;
   flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
 }
 .ol-about-icon {
   width: 28px; height: 28px;
@@ -615,39 +621,121 @@ html, body {
 .ol-about-link:hover { color: var(--accent); }
 
 .ol-footer {
-  background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 10px 20px;
+  padding: 16px 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  flex-wrap: wrap;
-  gap: 6px;
 }
 .ol-footer-copy {
-  font-size: 10px; color: var(--text3);
-  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text3);
 }
-.ol-footer-brand {
-  font-size: 10px; color: var(--text3);
-  font-family: var(--font-mono);
+.kofi-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text3);
+  text-decoration: none;
+  transition: color 0.15s;
 }
-.ol-footer-brand span { color: var(--accent); }
+.kofi-link:hover { color: var(--text); }
+.kofi-link svg { width: 12px; height: 12px; }
+/* ── Tools dropdown (next to wordmark) ── */
+.tools-wrap { position: relative; }
+.tools-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  color: var(--text2);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tools-btn:hover { border-color: var(--border2); background: var(--surface2); color: var(--text); }
+.tools-btn[aria-expanded="true"] { background: var(--surface2); color: var(--text); }
+.tools-btn svg { width: 11px; height: 11px; transition: transform 0.25s ease; }
+.tools-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
 
-
-    .kofi-link {
-      font-size: 10px;
-      font-family: var(--font-mono);
-      color: var(--text3);
-      text-decoration: none;
-      transition: color 0.15s;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .kofi-link:hover { color: var(--accent); }
-    .kofi-link svg { width: 12px; height: 12px; }
+.tools-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  min-width: 210px;
+  padding: 5px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 200;
+}
+.tools-menu.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+.tools-menu-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 6px 10px 4px;
+}
+.tools-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.1s, color 0.1s;
+}
+.tools-menu-item:hover { background: var(--surface2); color: var(--text); }
+.tools-menu-item.active { color: var(--accent); }
+.tools-menu-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.tools-menu-icon svg { width: 14px; height: 14px; }
+.tools-menu-tag {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.tools-menu-sep { height: 1px; background: var(--border); margin: 4px 0; }
+.tools-menu-home {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text3);
+  font-size: 12px;
+  transition: all 0.1s;
+}
+.tools-menu-home:hover { background: var(--surface2); color: var(--text2); }
+.tools-menu-home svg { width: 12px; height: 12px; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -658,14 +746,54 @@ html, body {
     <div class="wordmark">
       <div class="wordmark-icon">
         <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 2h4v4H2zM8 2h4v4H8zM2 8h4v4H2zM8 8h4v4H8z" fill="#0d0d0d" opacity="0.8"/>
-          <path d="M5 5h4v4H5z" fill="#0d0d0d"/>
+          <path d="M2 2h4v4H2zM8 2h4v4H8zM2 8h4v4H2zM8 8h4v4H8z" fill="white" opacity="0.85"/>
+          <path d="M5 5h4v4H5z" fill="white"/>
         </svg>
       </div>
       DXF Studio
     </div>
 
     <div class="titlebar-divider"></div>
+
+    <div class="tools-wrap">
+      <button class="tools-btn" id="tools-btn" aria-haspopup="true" aria-expanded="false">
+        Tools
+        <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M2 4l3.5 3.5L9 4"/>
+        </svg>
+      </button>
+      <div class="tools-menu" id="tools-menu">
+        <div class="tools-menu-label">Suite</div>
+        <a class="tools-menu-item active" href="/dxf-studio/">
+          <div class="tools-menu-icon" style="background: rgba(180,83,9,0.12)">
+            <svg viewBox="0 0 14 14" fill="none">
+              <path d="M2 2h4v4H2zM8 2h4v4H8zM2 8h4v4H2zM8 8h4v4H8z" fill="#b45309" opacity=".8"/>
+              <path d="M5 5h4v4H5z" fill="#b45309"/>
+            </svg>
+          </div>
+          DXF Studio
+          <span class="tools-menu-tag">CAD</span>
+        </a>
+        <a class="tools-menu-item" href="/bar-optimiser/">
+          <div class="tools-menu-icon" style="background: rgba(29,78,216,0.10)">
+            <svg viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="5" width="12" height="4" rx="1" fill="#7aa3f5" opacity=".8"/>
+              <rect x="1" y="2" width="5" height="2" rx=".5" fill="#7aa3f5"/>
+              <rect x="1" y="10" width="8" height="2" rx=".5" fill="#7aa3f5"/>
+            </svg>
+          </div>
+          Bar Optimiser
+          <span class="tools-menu-tag">Fab</span>
+        </a>
+        <div class="tools-menu-sep"></div>
+        <a class="tools-menu-home" href="/">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M1 7L7 1l6 6M2.5 5.5V13h3V9h3v4h3V5.5"/>
+          </svg>
+          0layer home
+        </a>
+      </div>
+    </div>
 
     <div class="file-badge" id="file-badge">
       <div class="file-badge-dot"></div>
@@ -691,43 +819,6 @@ html, body {
       </button>
       <input type="file" id="file-input" accept=".dxf">
       <input type="file" id="batch-input" accept=".dxf" multiple style="display:none">
-    </div>
-
-    <div class="ol-nav">
-      <a class="ol-wordmark" href="/">
-        <div class="ol-wordmark-icon">
-          <svg viewBox="0 0 11 11" fill="none">
-            <rect x="0.5" y="0.5" width="4" height="4" rx="0.8" fill="#0d0d0d"/>
-            <rect x="6.5" y="0.5" width="4" height="4" rx="0.8" fill="#0d0d0d"/>
-            <rect x="0.5" y="6.5" width="4" height="4" rx="0.8" fill="#0d0d0d"/>
-            <rect x="6.5" y="6.5" width="4" height="4" rx="0.8" fill="#0d0d0d"/>
-          </svg>
-        </div>
-        0layer
-      </a>
-      <div class="ol-nav-divider"></div>
-      <div style="position:relative">
-        <button class="ol-tools-btn" id="ol-tools-btn">
-          Tools
-          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 4l4 4 4-4"/></svg>
-        </button>
-        <div class="ol-dropdown" id="ol-dropdown">
-          <div class="ol-dropdown-label">Tools</div>
-          <a class="ol-dropdown-item active" href="/dxf-studio/">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V5z"/><path d="M10 2v3h3"/></svg>
-            DXF Studio
-          </a>
-          <a class="ol-dropdown-item " href="/bar-optimiser/">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="6" width="14" height="4" rx="1"/><path d="M4 6V4M7 6V3M10 6V4M13 6V3"/></svg>
-            Bar Optimiser
-          </a>
-          <div class="ol-dropdown-sep"></div>
-          <a class="ol-dropdown-home" href="/">
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6L6 1l5 5"/><path d="M3 5.5V10a.5.5 0 00.5.5h2V8h1v2.5h2A.5.5 0 009 10V5.5"/></svg>
-            Back to 0layer
-          </a>
-        </div>
-      </div>
     </div>
 
   </header>
@@ -805,20 +896,8 @@ html, body {
     </div>
   </div>
 
-  <div class="ol-about">
-    <div class="ol-about-icon">
-      <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 2h4v4H2zM8 2h4v4H8zM2 8h4v4H2zM8 8h4v4H8z" fill="#0d0d0d" opacity="0.8"/>
-        <path d="M5 5h4v4H5z" fill="#0d0d0d"/>
-      </svg>
-    </div>
-    <div class="ol-about-text">
-      <div class="ol-about-name">DXF Studio</div>
-      <div class="ol-about-desc">Load and inspect DXF files in the browser. View all layers, pan and zoom around the drawing, then use Explode &amp; Export to flatten everything to layer 0 and get a clean DXF 2013 file back. Batch explode runs multiple files at once and zips them up.</div>
-    </div>
-  </div>
   <div class="ol-footer">
-    <span class="ol-footer-copy">© 0layer · James Wright 2026</span>
+    <span class="ol-footer-copy">© 0layer 2026</span>
     <a class="kofi-link" href="https://ko-fi.com/0layer" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682-.145-1.682-.145V5.008h1.77s1.971.204 1.971 2.486c0 2.283-1.371 5.023-2.059 5.443z"/></svg>
       Support on Ko-fi
@@ -1952,6 +2031,18 @@ document.getElementById('batch-input').addEventListener('change', async function
   toast(msg, errors === 0);
 });
 
+// ── Tools dropdown (wordmark area) ───────────────────────────────
+(function() {
+  const btn  = document.getElementById('tools-btn');
+  const menu = document.getElementById('tools-menu');
+  if (!btn || !menu) return;
+  function open()  { menu.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); }
+  function close() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+  btn.addEventListener('click', function(e) { e.stopPropagation(); menu.classList.contains('open') ? close() : open(); });
+  document.addEventListener('click', function(e) { if (!btn.contains(e.target) && !menu.contains(e.target)) close(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
+})();
+
 // ── 0layer nav dropdown ──────────────────────────────────────────
 (function() {
   const btn = document.getElementById('ol-tools-btn');
@@ -1967,7 +2058,6 @@ document.getElementById('batch-input').addEventListener('change', async function
     dd.classList.remove('open');
   });
 })();
-
 </script>
 </body>
 </html>
