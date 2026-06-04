@@ -239,6 +239,7 @@
             }
             .card-dxf:hover { border-color: rgba(180, 83, 9, 0.4); }
             .card-bar:hover { border-color: rgba(29, 78, 216, 0.4); }
+            .card-forecast:hover { border-color: rgba(22, 163, 74, 0.4); }
 
             [data-theme="dark"] .card:hover {
                 box-shadow: 0 8px 32px rgba(0,0,0,0.4);
@@ -257,6 +258,8 @@
             .card-dxf .card-badge { background: rgba(180,83,9,0.1); color: #b45309; }
             .card-bar .card-badge { background: rgba(29,78,216,0.1); color: #5b8ef0; }
             [data-theme="dark"] .card-bar .card-badge { color: #7aa3f5; }
+            .card-forecast .card-badge { background: rgba(22,163,74,0.1); color: #16a34a; }
+            [data-theme="dark"] .card-forecast .card-badge { color: #4ade80; }
 
             .card-icon {
                 width: 42px;
@@ -273,6 +276,8 @@
             .card-dxf .card-icon svg { color: #b45309; }
             .card-bar .card-icon svg { color: #1d4ed8; }
             [data-theme="dark"] .card-bar .card-icon svg { color: #7aa3f5; }
+            .card-forecast .card-icon svg { color: #16a34a; }
+            [data-theme="dark"] .card-forecast .card-icon svg { color: #4ade80; }
             .card-icon svg { width: 20px; height: 20px; }
 
             .card-title {
@@ -301,6 +306,8 @@
             .card-dxf .card-cta { color: #b45309; }
             .card-bar .card-cta { color: #1d4ed8; }
             [data-theme="dark"] .card-bar .card-cta { color: #7aa3f5; }
+            .card-forecast .card-cta { color: #16a34a; }
+            [data-theme="dark"] .card-forecast .card-cta { color: #4ade80; }
             .card:hover .card-cta { gap: 10px; }
             .card-cta svg { width: 12px; height: 12px; }
 
@@ -398,6 +405,25 @@
                         </div>
                         <div class="card-title">DXF Studio</div>
                         <p class="card-desc">View, explode, and export clean DXF 2013 files with batch processing.</p>
+                        <span class="card-cta" aria-hidden="true">
+                            Open tool
+                            <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M2 6.5h9M8 3l3.5 3.5L8 10" />
+                            </svg>
+                        </span>
+                    </a>
+
+                    <a class="card card-forecast" href="/ForeCast/" role="listitem" aria-label="Open ForeCast">
+                        <span class="card-badge">Golf</span>
+                        <div class="card-icon" aria-hidden="true">
+                            <svg viewBox="0 0 14 14" fill="none">
+                                <path d="M7 1v8M5 7l2 2 2-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 12c1-1 2-1.5 5-1.5s4 .5 5 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                                <path d="M9 3.5l2.5-.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="card-title">ForeCast</div>
+                        <p class="card-desc">Hole-by-hole weather for your golf round. UK & Ireland courses, up to 14 days ahead.</p>
                         <span class="card-cta" aria-hidden="true">
                             Open tool
                             <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.8">
